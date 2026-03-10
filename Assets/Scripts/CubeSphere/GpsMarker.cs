@@ -1,5 +1,8 @@
 using UnityEngine;
 using System.Collections;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 [ExecuteAlways]
 public class GpsMarker : MonoBehaviour
@@ -40,25 +43,36 @@ public class GpsMarker : MonoBehaviour
     void OnValidate()
     {
         if (!isActiveAndEnabled) return;
-        // Rebuild marker when properties change in inspector
-        if (_marker != null)
-        {
-            DestroyImmediate(_marker);
-            _marker = null;
-            _pulse = null;
-            _pulseMat = null;
-        }
 #if UNITY_EDITOR
-        UnityEditor.EditorApplication.delayCall += () =>
+        EditorApplication.delayCall += () =>
         {
-            if (this != null && isActiveAndEnabled && _marker == null)
-                CreateMarker();
+            if (this == null || !isActiveAndEnabled) return;
+            if (_marker != null)
+            {
+                DestroyImmediate(_marker);
+                _marker = null;
+                _pulse = null;
+                _pulseMat = null;
+            }
+            CreateMarker();
         };
 #endif
     }
 
+    void CleanupOrphanMarkers()
+    {
+        // Destroy any orphan GPS_Dot children left from previous domain reloads
+        for (int i = transform.childCount - 1; i >= 0; i--)
+        {
+            var child = transform.GetChild(i);
+            if (child.name == "GPS_Dot")
+                DestroyImmediate(child.gameObject);
+        }
+    }
+
     void CreateMarker()
     {
+        CleanupOrphanMarkers();
         _marker = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         _marker.name = "GPS_Dot";
         _marker.hideFlags = HideFlags.DontSave;
@@ -110,8 +124,24 @@ public class GpsMarker : MonoBehaviour
 
     void Update()
     {
-        if (!Application.isPlaying) return;
-        if (_pulse != null && _pulseMat != null)
+        if (_marker == null) return;
+
+        // Keep marker at constant screen size regardless of camera distance
+        Camera cam = Camera.current;
+#if UNITY_EDITOR
+        if (cam == null)
+            cam = UnityEditor.SceneView.lastActiveSceneView?.camera;
+#endif
+        if (cam == null) cam = Camera.main;
+        if (cam != null)
+        {
+            float dist = Vector3.Distance(cam.transform.position, _marker.transform.position);
+            float screenScale = dist * 0.01f;
+            _marker.transform.localScale = Vector3.one * markerSize * screenScale;
+        }
+
+        // Pulse animation (play mode only)
+        if (Application.isPlaying && _pulse != null && _pulseMat != null)
         {
             float scale = 1.5f + Mathf.Sin(Time.time * pulseSpeed) * pulseAmplitude;
             _pulse.transform.localScale = Vector3.one * scale;
