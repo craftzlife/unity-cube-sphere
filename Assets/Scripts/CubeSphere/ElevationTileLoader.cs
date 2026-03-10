@@ -3,7 +3,11 @@ using UnityEngine.Networking;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
+[ExecuteAlways]
 [RequireComponent(typeof(CubeSphere))]
 public class ElevationTileLoader : MonoBehaviour
 {
@@ -12,11 +16,13 @@ public class ElevationTileLoader : MonoBehaviour
 
     [Header("LOD")]
     [Tooltip("Which LOD level to load. Higher = more tiles, more detail.")]
-    public int targetLod = 5;
+    public int targetLod = 2;
 
     private CubeSphere _cubeSphere;
     private TileManifest _manifest;
     private Material _elevationShaderMat;
+    private Coroutine _loadCoroutine;
+    private bool _isLoading;
 
     [Serializable]
     public class TileInfo
@@ -45,7 +51,7 @@ public class ElevationTileLoader : MonoBehaviour
         public TileInfo[] tiles;
     }
 
-    void Start()
+    void OnEnable()
     {
         _cubeSphere = GetComponent<CubeSphere>();
 
@@ -55,11 +61,38 @@ public class ElevationTileLoader : MonoBehaviour
         else
             Debug.LogWarning("ElevationColorRamp shader not found");
 
-        StartCoroutine(LoadManifestAndTiles());
+        _loadCoroutine = StartCoroutine(LoadManifestAndTiles());
     }
+
+    void OnDisable()
+    {
+        if (_loadCoroutine != null)
+        {
+            StopCoroutine(_loadCoroutine);
+            _loadCoroutine = null;
+        }
+        _isLoading = false;
+#if UNITY_EDITOR
+        EditorApplication.update -= EditorPumpUpdate;
+#endif
+    }
+
+#if UNITY_EDITOR
+    void EditorPumpUpdate()
+    {
+        if (!Application.isPlaying && _isLoading)
+            EditorApplication.QueuePlayerLoopUpdate();
+    }
+#endif
 
     IEnumerator LoadManifestAndTiles()
     {
+        _isLoading = true;
+#if UNITY_EDITOR
+        if (!Application.isPlaying)
+            EditorApplication.update += EditorPumpUpdate;
+#endif
+
         string url = $"{serverUrl}/manifest.json";
         using (UnityWebRequest req = UnityWebRequest.Get(url))
         {
@@ -67,6 +100,7 @@ public class ElevationTileLoader : MonoBehaviour
             if (req.result != UnityWebRequest.Result.Success)
             {
                 Debug.LogError($"Failed to load manifest: {req.error}");
+                FinishLoading();
                 yield break;
             }
             _manifest = JsonUtility.FromJson<TileManifest>(req.downloadHandler.text);
@@ -88,6 +122,17 @@ public class ElevationTileLoader : MonoBehaviour
 
         // Then load and composite tile data for faces that have it
         yield return LoadBestLodPerFace();
+
+        FinishLoading();
+    }
+
+    void FinishLoading()
+    {
+        _isLoading = false;
+        _loadCoroutine = null;
+#if UNITY_EDITOR
+        EditorApplication.update -= EditorPumpUpdate;
+#endif
     }
 
     void ApplyOceanToAllFaces()
@@ -186,7 +231,7 @@ public class ElevationTileLoader : MonoBehaviour
                 if (!ImageConversion.LoadImage(tileTex, req.downloadHandler.data))
                 {
                     Debug.LogWarning($"Failed to decode: {tile.path}");
-                    Destroy(tileTex);
+                    SafeDestroy(tileTex);
                     continue;
                 }
 
@@ -217,7 +262,7 @@ public class ElevationTileLoader : MonoBehaviour
                     faceTex.SetPixels(destX, destY, destW, destH, tilePixels);
                 }
 
-                Destroy(tileTex);
+                SafeDestroy(tileTex);
             }
         }
 
@@ -232,5 +277,13 @@ public class ElevationTileLoader : MonoBehaviour
         {
             _cubeSphere.SetFaceElevationTexture(face, faceTex, globalMin, globalMax, _elevationShaderMat);
         }
+    }
+
+    static void SafeDestroy(UnityEngine.Object obj)
+    {
+        if (Application.isPlaying)
+            Destroy(obj);
+        else
+            DestroyImmediate(obj);
     }
 }
