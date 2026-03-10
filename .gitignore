@@ -50,6 +50,10 @@ crashlytics-build.properties
 # JetBrains
 *.sln.iml
 
+# Ignore local screenshot captures
+/[Aa]ssets/Screenshots/
+/[Aa]ssets/Screenshots.meta
+
 # OS generated
 .DS_Store
 .DS_Store?
