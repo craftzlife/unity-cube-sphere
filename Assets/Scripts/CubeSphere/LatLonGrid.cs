@@ -22,6 +22,7 @@ public class LatLonGrid : MonoBehaviour
     private CubeSphere _cubeSphere;
     private GameObject _gridParent;
     private int _currentLodIndex = -1;
+    private float _gridCreationDist;
 
     struct LodLevel
     {
@@ -65,7 +66,7 @@ public class LatLonGrid : MonoBehaviour
         if (!Application.isPlaying)
         {
             CheckLodWithCamera(sv.camera);
-            BillboardLabels(sv.camera);
+            UpdateVisuals(sv.camera);
         }
     }
 #endif
@@ -90,7 +91,7 @@ public class LatLonGrid : MonoBehaviour
         Camera cam = Camera.main;
         if (cam == null) return;
         CheckLodWithCamera(cam);
-        BillboardLabels(cam);
+        UpdateVisuals(cam);
     }
 
     void CheckLod()
@@ -120,6 +121,7 @@ public class LatLonGrid : MonoBehaviour
         if (newLod != _currentLodIndex)
         {
             _currentLodIndex = newLod;
+            _gridCreationDist = dist;
             RebuildGrid(Lods[newLod]);
         }
     }
@@ -197,24 +199,40 @@ public class LatLonGrid : MonoBehaviour
         }
     }
 
-    void BillboardLabels(Camera cam)
+    void UpdateVisuals(Camera cam)
     {
         if (_gridParent == null || cam == null) return;
-        Transform labels = _gridParent.transform.Find("Labels");
-        if (labels == null) return;
 
         Vector3 camPos = cam.transform.position;
         Vector3 sphereCenter = transform.position;
         Vector3 camDir = (camPos - sphereCenter).normalized;
-        Quaternion rot = Quaternion.LookRotation(cam.transform.forward, cam.transform.up);
+        float distToCenter = Vector3.Distance(camPos, sphereCenter);
 
-        // Scale each label to maintain constant screen size regardless of zoom
-        LodLevel lod = Lods[Mathf.Clamp(_currentLodIndex, 0, Lods.Length - 1)];
-        float referenceDist = lod.maxDist < float.MaxValue ? lod.maxDist * 0.5f : 300f;
+        // Use the distance at grid creation as the reference so lines stay constant
+        float referenceDist = _gridCreationDist > 0f ? _gridCreationDist : distToCenter;
+        float lineScale = distToCenter / referenceDist;
+
+        // Scale line widths to maintain constant screen thickness
+        foreach (Transform child in _gridParent.transform)
+        {
+            if (child.name == "Labels") continue;
+            LineRenderer lr = child.GetComponent<LineRenderer>();
+            if (lr != null)
+            {
+                float baseWidth = child.name == "Lat_0" || child.name == "Lon_0"
+                    ? lineWidth * 2.5f : lineWidth;
+                lr.widthMultiplier = lineScale;
+            }
+        }
+
+        // Billboard and scale labels
+        Transform labels = _gridParent.transform.Find("Labels");
+        if (labels == null) return;
+
+        Quaternion rot = Quaternion.LookRotation(cam.transform.forward, cam.transform.up);
 
         foreach (Transform child in labels)
         {
-            // Hide labels on the back side of the sphere
             Vector3 labelDir = (child.position - sphereCenter).normalized;
             bool visible = Vector3.Dot(labelDir, camDir) > 0.2f;
             child.gameObject.SetActive(visible);
@@ -226,6 +244,12 @@ public class LatLonGrid : MonoBehaviour
                 child.localScale = Vector3.one * scale;
             }
         }
+
+#if UNITY_EDITOR
+        // Ensure continuous repaints in Scene View during editor mode
+        if (!Application.isPlaying)
+            SceneView.RepaintAll();
+#endif
     }
 
     // ----------------------------------------------------------------
