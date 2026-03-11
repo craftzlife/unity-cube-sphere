@@ -208,6 +208,10 @@ public class LatLonGrid : MonoBehaviour
         Vector3 camDir = (camPos - sphereCenter).normalized;
         Quaternion rot = Quaternion.LookRotation(cam.transform.forward, cam.transform.up);
 
+        // Scale each label to maintain constant screen size regardless of zoom
+        LodLevel lod = Lods[Mathf.Clamp(_currentLodIndex, 0, Lods.Length - 1)];
+        float referenceDist = lod.maxDist < float.MaxValue ? lod.maxDist * 0.5f : 300f;
+
         foreach (Transform child in labels)
         {
             // Hide labels on the back side of the sphere
@@ -215,7 +219,12 @@ public class LatLonGrid : MonoBehaviour
             bool visible = Vector3.Dot(labelDir, camDir) > 0.2f;
             child.gameObject.SetActive(visible);
             if (visible)
+            {
                 child.rotation = rot;
+                float distToLabel = Vector3.Distance(camPos, child.position);
+                float scale = distToLabel / referenceDist;
+                child.localScale = Vector3.one * scale;
+            }
         }
     }
 
