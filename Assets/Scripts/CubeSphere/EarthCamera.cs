@@ -1,8 +1,12 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class OrbitCamera : MonoBehaviour
+[RequireComponent(typeof(Camera))]
+public class EarthCamera : MonoBehaviour
 {
+    public static EarthCamera Instance { get; private set; }
+
+    [Header("Orbit")]
     public Transform target;
     public float distance = 300f;
     public float rotationSpeed = 5f;
@@ -10,13 +14,26 @@ public class OrbitCamera : MonoBehaviour
     public float minDistance = 110f;
     public float maxDistance = 800f;
 
+    [Header("LOD")]
+    [Range(0, 10)]
+    public int currentLod;
+
+    public event System.Action<int> OnLodChanged;
+
     private float _yaw = 160f;
     private float _pitch = 15f;
     private Mouse _mouse;
+    private int _previousLod = -1;
 
     void Awake()
     {
+        Instance = this;
         _mouse = Mouse.current;
+    }
+
+    void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
     }
 
     void LateUpdate()
@@ -41,5 +58,27 @@ public class OrbitCamera : MonoBehaviour
 
         transform.position = targetPos + offset;
         transform.LookAt(targetPos);
+
+        int lod = ComputeLod(distance, minDistance, maxDistance);
+        if (lod != currentLod)
+        {
+            currentLod = lod;
+            if (currentLod != _previousLod)
+            {
+                _previousLod = currentLod;
+                OnLodChanged?.Invoke(currentLod);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Compute LOD [0,10] from distance using logarithmic mapping.
+    /// LOD 10 = closest, LOD 0 = farthest.
+    /// </summary>
+    public static int ComputeLod(float distance, float minDist = 110f, float maxDist = 800f)
+    {
+        distance = Mathf.Clamp(distance, minDist, maxDist);
+        float t = Mathf.InverseLerp(Mathf.Log(minDist), Mathf.Log(maxDist), Mathf.Log(distance));
+        return Mathf.Clamp(Mathf.RoundToInt((1f - t) * 10f), 0, 10);
     }
 }

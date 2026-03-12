@@ -21,22 +21,29 @@ public class LatLonGrid : MonoBehaviour
 
     private CubeSphere _cubeSphere;
     private GameObject _gridParent;
-    private int _currentLodIndex = -1;
+    private int _currentLod = -1;
     private float _gridCreationDist;
 
-    struct LodLevel
+    struct GridParams
     {
-        public float maxDist;
         public float gridSpacing;
         public float labelSpacing;
         public float charSize;
     }
 
-    private static readonly LodLevel[] Lods = {
-        new LodLevel { maxDist = 150f,            gridSpacing = 5f,  labelSpacing = 10f, charSize = 0.4f },
-        new LodLevel { maxDist = 250f,            gridSpacing = 10f, labelSpacing = 10f, charSize = 0.55f },
-        new LodLevel { maxDist = 400f,            gridSpacing = 15f, labelSpacing = 15f, charSize = 0.8f },
-        new LodLevel { maxDist = float.MaxValue,  gridSpacing = 30f, labelSpacing = 30f, charSize = 1.2f },
+    // LOD 0 = farthest (coarsest), LOD 10 = closest (finest)
+    private static readonly GridParams[] LodToGrid = {
+        new GridParams { gridSpacing = 30f, labelSpacing = 30f, charSize = 1.2f  }, // LOD 0
+        new GridParams { gridSpacing = 30f, labelSpacing = 30f, charSize = 1.1f  }, // LOD 1
+        new GridParams { gridSpacing = 15f, labelSpacing = 15f, charSize = 0.9f  }, // LOD 2
+        new GridParams { gridSpacing = 15f, labelSpacing = 15f, charSize = 0.8f  }, // LOD 3
+        new GridParams { gridSpacing = 10f, labelSpacing = 10f, charSize = 0.65f }, // LOD 4
+        new GridParams { gridSpacing = 10f, labelSpacing = 10f, charSize = 0.55f }, // LOD 5
+        new GridParams { gridSpacing = 5f,  labelSpacing = 10f, charSize = 0.45f }, // LOD 6
+        new GridParams { gridSpacing = 5f,  labelSpacing = 5f,  charSize = 0.4f  }, // LOD 7
+        new GridParams { gridSpacing = 2f,  labelSpacing = 5f,  charSize = 0.3f  }, // LOD 8
+        new GridParams { gridSpacing = 2f,  labelSpacing = 2f,  charSize = 0.25f }, // LOD 9
+        new GridParams { gridSpacing = 1f,  labelSpacing = 2f,  charSize = 0.2f  }, // LOD 10
     };
 
     void OnEnable()
@@ -45,7 +52,7 @@ public class LatLonGrid : MonoBehaviour
 #if UNITY_EDITOR
         SceneView.duringSceneGui += OnSceneGUI;
 #endif
-        _currentLodIndex = -1;
+        _currentLod = -1;
         CheckLod();
     }
 
@@ -56,7 +63,7 @@ public class LatLonGrid : MonoBehaviour
 #endif
         if (_gridParent != null)
             DestroyImmediate(_gridParent);
-        _currentLodIndex = -1;
+        _currentLod = -1;
     }
 
 #if UNITY_EDITOR
@@ -74,8 +81,7 @@ public class LatLonGrid : MonoBehaviour
     void OnValidate()
     {
         if (!isActiveAndEnabled) return;
-        _currentLodIndex = -1;
-        // Delay rebuild to next frame to avoid editor issues
+        _currentLod = -1;
 #if UNITY_EDITOR
         EditorApplication.delayCall += () =>
         {
@@ -108,28 +114,25 @@ public class LatLonGrid : MonoBehaviour
 
         float dist = Vector3.Distance(cam.transform.position, transform.position);
 
-        int newLod = Lods.Length - 1;
-        for (int i = 0; i < Lods.Length; i++)
-        {
-            if (dist < Lods[i].maxDist)
-            {
-                newLod = i;
-                break;
-            }
-        }
+        // Use EarthCamera LOD in play mode, compute from distance in editor
+        int newLod;
+        if (Application.isPlaying && EarthCamera.Instance != null)
+            newLod = EarthCamera.Instance.currentLod;
+        else
+            newLod = EarthCamera.ComputeLod(dist);
 
-        if (newLod != _currentLodIndex)
+        if (newLod != _currentLod)
         {
-            _currentLodIndex = newLod;
+            _currentLod = newLod;
             _gridCreationDist = dist;
-            RebuildGrid(Lods[newLod]);
+            RebuildGrid(LodToGrid[newLod]);
         }
     }
 
     /// <summary>Called externally (e.g. after radius change). Forces LOD re-evaluation.</summary>
     public void GenerateGrid()
     {
-        _currentLodIndex = -1;
+        _currentLod = -1;
         CheckLod();
     }
 
@@ -144,7 +147,7 @@ public class LatLonGrid : MonoBehaviour
         return Camera.main;
     }
 
-    void RebuildGrid(LodLevel lod)
+    void RebuildGrid(GridParams gp)
     {
         if (_gridParent != null)
             DestroyImmediate(_gridParent);
@@ -158,7 +161,7 @@ public class LatLonGrid : MonoBehaviour
         float labelR = r * 1.04f;
 
         // --- Latitude lines ---
-        for (float lat = -90f + lod.gridSpacing; lat < 90f; lat += lod.gridSpacing)
+        for (float lat = -90f + gp.gridSpacing; lat < 90f; lat += gp.gridSpacing)
         {
             bool isEquator = Mathf.Abs(lat) < 0.01f;
             Color col = isEquator ? equatorColor : latitudeColor;
@@ -167,7 +170,7 @@ public class LatLonGrid : MonoBehaviour
         }
 
         // --- Longitude lines ---
-        for (float lon = -180f; lon < 180f; lon += lod.gridSpacing)
+        for (float lon = -180f; lon < 180f; lon += gp.gridSpacing)
         {
             bool isPrime = Mathf.Abs(lon) < 0.01f;
             Color col = isPrime ? primeMeridianColor : longitudeColor;
@@ -175,17 +178,17 @@ public class LatLonGrid : MonoBehaviour
             CreateLongitudeLine(lon, lineR, col, w);
         }
 
-        // --- Labels at every grid intersection ---
+        // --- Labels at every label intersection ---
         GameObject labelsGo = new GameObject("Labels");
         labelsGo.transform.SetParent(_gridParent.transform, false);
 
-        for (float lat = -90f + lod.labelSpacing; lat < 90f; lat += lod.labelSpacing)
+        for (float lat = -90f + gp.labelSpacing; lat < 90f; lat += gp.labelSpacing)
         {
             string latText = Mathf.Abs(lat) < 0.01f
                 ? "0°"
                 : $"{Mathf.Abs(lat):F0}°{(lat > 0 ? "N" : "S")}";
 
-            for (float lon = -180f; lon < 180f; lon += lod.labelSpacing)
+            for (float lon = -180f; lon < 180f; lon += gp.labelSpacing)
             {
                 string lonText;
                 if (Mathf.Abs(lon) < 0.01f) lonText = "0°";
@@ -194,7 +197,7 @@ public class LatLonGrid : MonoBehaviour
 
                 string text = $"{latText}\n{lonText}";
                 Vector3 pos = S2Geometry.LatLonToUnityPosition(lat, lon, labelR);
-                CreateLabel(labelsGo.transform, text, pos, lod.charSize);
+                CreateLabel(labelsGo.transform, text, pos, gp.charSize);
             }
         }
     }
@@ -208,24 +211,17 @@ public class LatLonGrid : MonoBehaviour
         Vector3 camDir = (camPos - sphereCenter).normalized;
         float distToCenter = Vector3.Distance(camPos, sphereCenter);
 
-        // Use the distance at grid creation as the reference so lines stay constant
         float referenceDist = _gridCreationDist > 0f ? _gridCreationDist : distToCenter;
         float lineScale = distToCenter / referenceDist;
 
-        // Scale line widths to maintain constant screen thickness
         foreach (Transform child in _gridParent.transform)
         {
             if (child.name == "Labels") continue;
             LineRenderer lr = child.GetComponent<LineRenderer>();
             if (lr != null)
-            {
-                float baseWidth = child.name == "Lat_0" || child.name == "Lon_0"
-                    ? lineWidth * 2.5f : lineWidth;
                 lr.widthMultiplier = lineScale;
-            }
         }
 
-        // Billboard and scale labels
         Transform labels = _gridParent.transform.Find("Labels");
         if (labels == null) return;
 
@@ -246,7 +242,6 @@ public class LatLonGrid : MonoBehaviour
         }
 
 #if UNITY_EDITOR
-        // Ensure continuous repaints in Scene View during editor mode
         if (!Application.isPlaying)
             SceneView.RepaintAll();
 #endif

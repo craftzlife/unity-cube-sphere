@@ -15,7 +15,7 @@ public class ElevationTileLoader : MonoBehaviour
     public string serverUrl = "http://localhost:8000";
 
     [Header("LOD")]
-    [Tooltip("Which LOD level to load. Higher = more tiles, more detail.")]
+    [Tooltip("Tile LOD derived from EarthCamera. Updated automatically at runtime.")]
     public int targetLod = 2;
 
     private CubeSphere _cubeSphere;
@@ -23,6 +23,7 @@ public class ElevationTileLoader : MonoBehaviour
     private Material _elevationShaderMat;
     private Coroutine _loadCoroutine;
     private bool _isLoading;
+    private int _loadedTileLod = -1;
 
     [Serializable]
     public class TileInfo
@@ -72,6 +73,10 @@ public class ElevationTileLoader : MonoBehaviour
             _loadCoroutine = null;
         }
         _isLoading = false;
+
+        if (EarthCamera.Instance != null)
+            EarthCamera.Instance.OnLodChanged -= OnEarthLodChanged;
+
 #if UNITY_EDITOR
         EditorApplication.update -= EditorPumpUpdate;
 #endif
@@ -84,6 +89,50 @@ public class ElevationTileLoader : MonoBehaviour
             EditorApplication.QueuePlayerLoopUpdate();
     }
 #endif
+
+    void OnEarthLodChanged(int earthLod)
+    {
+        if (_manifest == null || _isLoading) return;
+
+        int newTileLod = EarthLodToTileLod(earthLod);
+        if (newTileLod != _loadedTileLod)
+        {
+            targetLod = newTileLod;
+            ReloadTiles();
+        }
+    }
+
+    int EarthLodToTileLod(int earthLod)
+    {
+        if (_manifest == null || _manifest.lod_range == null || _manifest.lod_range.Length < 2)
+            return targetLod;
+
+        int minTile = _manifest.lod_range[0];
+        int maxTile = _manifest.lod_range[1];
+        // Map earth LOD [0,10] to tile LOD [minTile, maxTile]
+        float t = earthLod / 10f;
+        return Mathf.Clamp(Mathf.RoundToInt(Mathf.Lerp(minTile, maxTile, t)), minTile, maxTile);
+    }
+
+    public void ReloadTiles()
+    {
+        if (_isLoading || _manifest == null) return;
+        _loadCoroutine = StartCoroutine(ReloadTilesCoroutine());
+    }
+
+    IEnumerator ReloadTilesCoroutine()
+    {
+        _isLoading = true;
+#if UNITY_EDITOR
+        if (!Application.isPlaying)
+            EditorApplication.update += EditorPumpUpdate;
+#endif
+
+        ApplyOceanToAllFaces();
+        yield return LoadBestLodPerFace();
+
+        FinishLoading();
+    }
 
     IEnumerator LoadManifestAndTiles()
     {
@@ -117,10 +166,14 @@ public class ElevationTileLoader : MonoBehaviour
             if (gps != null) gps.UpdatePosition();
         }
 
-        // Apply elevation shader to ALL 6 faces first (consistent ocean look)
-        ApplyOceanToAllFaces();
+        // Subscribe to EarthCamera LOD changes
+        if (EarthCamera.Instance != null)
+        {
+            targetLod = EarthLodToTileLod(EarthCamera.Instance.currentLod);
+            EarthCamera.Instance.OnLodChanged += OnEarthLodChanged;
+        }
 
-        // Then load and composite tile data for faces that have it
+        ApplyOceanToAllFaces();
         yield return LoadBestLodPerFace();
 
         FinishLoading();
@@ -150,7 +203,6 @@ public class ElevationTileLoader : MonoBehaviour
 
     IEnumerator LoadBestLodPerFace()
     {
-        // Group tiles by face
         Dictionary<int, List<TileInfo>> tilesByFace = new Dictionary<int, List<TileInfo>>();
         foreach (var t in _manifest.tiles)
         {
@@ -164,7 +216,6 @@ public class ElevationTileLoader : MonoBehaviour
             int face = kvp.Key;
             List<TileInfo> faceTiles = kvp.Value;
 
-            // Find best LOD that's <= targetLod
             int bestLod = 0;
             foreach (var t in faceTiles)
             {
@@ -172,7 +223,6 @@ public class ElevationTileLoader : MonoBehaviour
                     bestLod = t.level;
             }
 
-            // Collect tiles at best LOD
             List<TileInfo> lodTiles = new List<TileInfo>();
             foreach (var t in faceTiles)
             {
@@ -183,15 +233,16 @@ public class ElevationTileLoader : MonoBehaviour
             Debug.Log($"Face {face}: loading {lodTiles.Count} tiles at LOD {bestLod}");
             yield return LoadAndCompositeFace(face, bestLod, lodTiles);
         }
+
+        _loadedTileLod = targetLod;
     }
 
     IEnumerator LoadAndCompositeFace(int face, int lod, List<TileInfo> tiles)
     {
-        int tileRes = _manifest.resolution; // 256
-        int gridSize = 1 << lod; // 2^lod tiles per axis
+        int tileRes = _manifest.resolution;
+        int gridSize = 1 << lod;
         int faceRes = gridSize * tileRes;
 
-        // Cap texture size to 4096
         int maxFaceRes = 4096;
         float scale = 1f;
         if (faceRes > maxFaceRes)
@@ -200,12 +251,10 @@ public class ElevationTileLoader : MonoBehaviour
             faceRes = maxFaceRes;
         }
 
-        // Create face composite texture
         Texture2D faceTex = new Texture2D(faceRes, faceRes, TextureFormat.RFloat, false);
         faceTex.filterMode = FilterMode.Bilinear;
         faceTex.wrapMode = TextureWrapMode.Clamp;
 
-        // Fill with zero (ocean)
         Color[] fill = new Color[faceRes * faceRes];
         faceTex.SetPixels(fill);
 
@@ -235,19 +284,16 @@ public class ElevationTileLoader : MonoBehaviour
                     continue;
                 }
 
-                // Copy tile pixels into composite at the correct position
                 int destX = Mathf.RoundToInt(tile.ix * tileRes * scale);
                 int destY = Mathf.RoundToInt(tile.iy * tileRes * scale);
                 int destW = Mathf.RoundToInt(tileRes * scale);
                 int destH = Mathf.RoundToInt(tileRes * scale);
 
-                // Clamp to texture bounds
                 destW = Mathf.Min(destW, faceRes - destX);
                 destH = Mathf.Min(destH, faceRes - destY);
 
                 if (destW > 0 && destH > 0)
                 {
-                    // If we need to resize tile, use GetPixelBilinear
                     Color[] tilePixels = new Color[destW * destH];
                     for (int y = 0; y < destH; y++)
                     {
