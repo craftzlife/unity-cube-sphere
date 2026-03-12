@@ -37,13 +37,13 @@ public class LatLonGrid : MonoBehaviour
         new GridParams { gridSpacing = 30f, labelSpacing = 30f, charSize = 1.1f  }, // LOD 1
         new GridParams { gridSpacing = 15f, labelSpacing = 15f, charSize = 0.9f  }, // LOD 2
         new GridParams { gridSpacing = 15f, labelSpacing = 15f, charSize = 0.8f  }, // LOD 3
-        new GridParams { gridSpacing = 10f, labelSpacing = 10f, charSize = 0.65f }, // LOD 4
-        new GridParams { gridSpacing = 10f, labelSpacing = 10f, charSize = 0.55f }, // LOD 5
-        new GridParams { gridSpacing = 5f,  labelSpacing = 10f, charSize = 0.45f }, // LOD 6
-        new GridParams { gridSpacing = 5f,  labelSpacing = 5f,  charSize = 0.4f  }, // LOD 7
-        new GridParams { gridSpacing = 2f,  labelSpacing = 5f,  charSize = 0.3f  }, // LOD 8
-        new GridParams { gridSpacing = 2f,  labelSpacing = 2f,  charSize = 0.25f }, // LOD 9
-        new GridParams { gridSpacing = 1f,  labelSpacing = 2f,  charSize = 0.2f  }, // LOD 10
+        new GridParams { gridSpacing = 10f, labelSpacing = 30f, charSize = 0.65f }, // LOD 4
+        new GridParams { gridSpacing = 10f, labelSpacing = 30f, charSize = 0.55f }, // LOD 5
+        new GridParams { gridSpacing = 5f,  labelSpacing = 30f, charSize = 0.45f }, // LOD 6
+        new GridParams { gridSpacing = 5f,  labelSpacing = 30f, charSize = 0.4f  }, // LOD 7
+        new GridParams { gridSpacing = 2f,  labelSpacing = 15f, charSize = 0.3f  }, // LOD 8
+        new GridParams { gridSpacing = 2f,  labelSpacing = 15f, charSize = 0.25f }, // LOD 9
+        new GridParams { gridSpacing = 1f,  labelSpacing = 10f, charSize = 0.2f  }, // LOD 10
     };
 
     void OnEnable()
