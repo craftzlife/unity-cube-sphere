@@ -12,7 +12,7 @@ public class EarthCamera : MonoBehaviour
     public float distance = 300f;
     public float rotationSpeed = 5f;
     public float zoomSpeed = 50f;
-    public float minDistance = 110f;
+    public float minDistance = 101f;
     public float maxDistance = 800f;
 
     [Header("LOD")]
@@ -25,11 +25,13 @@ public class EarthCamera : MonoBehaviour
     private float _pitch = 15f;
     private Mouse _mouse;
     private int _previousLod = -1;
+    private Camera _cam;
 
     void Awake()
     {
         Instance = this;
         _mouse = Mouse.current;
+        _cam = GetComponent<Camera>();
     }
 
     void OnEnable()
@@ -84,6 +86,11 @@ public class EarthCamera : MonoBehaviour
 
         ApplyOrbit();
 
+        // Dynamic clip planes based on orbit distance (globe radius = 100)
+        float surfaceDist = distance - 100f;
+        _cam.nearClipPlane = Mathf.Max(0.1f, surfaceDist * 0.1f);
+        _cam.farClipPlane  = distance + 150f;
+
         int lod = ComputeLod(distance, minDistance, maxDistance);
         if (lod != currentLod)
         {
@@ -100,7 +107,7 @@ public class EarthCamera : MonoBehaviour
     /// Compute LOD [0,10] from distance using logarithmic mapping.
     /// LOD 10 = closest, LOD 0 = farthest.
     /// </summary>
-    public static int ComputeLod(float distance, float minDist = 110f, float maxDist = 800f)
+    public static int ComputeLod(float distance, float minDist = 101f, float maxDist = 800f)
     {
         distance = Mathf.Clamp(distance, minDist, maxDist);
         float t = Mathf.InverseLerp(Mathf.Log(minDist), Mathf.Log(maxDist), Mathf.Log(distance));
