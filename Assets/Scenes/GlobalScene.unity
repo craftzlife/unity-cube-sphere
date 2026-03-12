@@ -240,7 +240,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1128350702}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.043353118, y: 0.95664304, z: 0.20226778, w: -0.2050423}
+  m_LocalRotation: {x: 0.059823487, y: 0.88432807, z: 0.11817189, w: -0.4476834}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -311,10 +311,11 @@ MonoBehaviour:
   latitude: 10.8231
   longitude: 106.6297
   useDeviceGps: 1
-  markerSize: 2
-  markerColor: {r: 0.1, g: 0.4, b: 1, a: 1}
+  markerSize: 1
+  markerColor: {r: 0.10196078, g: 0.37063575, b: 1, a: 1}
   pulseSpeed: 10
   pulseAmplitude: 1
+  screenPixelSize: 15
 --- !u!1 &1302869462
 GameObject:
   m_ObjectHideFlags: 0
@@ -392,11 +393,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EarthCamera
   target: {fileID: 1408452224}
   distance: 300
-  rotationSpeed: 5
+  rotationSpeed: 1
   zoomSpeed: 50
-  minDistance: 110
-  maxDistance: 800
-  currentLod: 5
+  minDistance: 102
+  maxDistance: 5000
+  currentLod: 7
 --- !u!20 &1302869465
 Camera:
   m_ObjectHideFlags: 0
@@ -428,8 +429,8 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 1
-  far clip plane: 2000
+  near clip plane: 20
+  far clip plane: 450
   field of view: 60
   orthographic: 0
   orthographic size: 5
@@ -457,7 +458,7 @@ Transform:
   m_GameObject: {fileID: 1302869462}
   serializedVersion: 2
   m_LocalRotation: {x: -0.015727302, y: 0.9835971, z: 0.10734924, w: 0.14410283}
-  m_LocalPosition: {x: -84.03049, y: -64.71285, z: 280.62637}
+  m_LocalPosition: {x: -85.33096, y: -63.80721, z: 280.53513}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -512,7 +513,7 @@ MonoBehaviour:
   longitudeColor: {r: 1, g: 1, b: 1, a: 0.6}
   equatorColor: {r: 1, g: 0.8, b: 0, a: 0.6}
   primeMeridianColor: {r: 1, g: 0.2, b: 0.2, a: 0.6}
-  lineWidth: 0.03
+  lineWidth: 0.05
   pointsPerLine: 360
   labelColor: {r: 1, g: 1, b: 0.7, a: 1}
 --- !u!114 &1408452223
@@ -537,14 +538,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1408452220}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: 0.21750905, y: -0.00061883795, z: 0.034789175, w: 0.97543794}
+  m_LocalPosition: {x: -1.3004744, y: 0.90564513, z: -0.09123468}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1198263918}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 25.111, y: 0.881, z: 4.281}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

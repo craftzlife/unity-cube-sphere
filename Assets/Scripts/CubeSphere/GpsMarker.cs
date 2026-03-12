@@ -17,6 +17,8 @@ public class GpsMarker : MonoBehaviour
     public Color markerColor = new Color(0.0f, 0.3f, 1f, 1f);
     public float pulseSpeed = 2f;
     public float pulseAmplitude = 0.3f;
+    [Tooltip("Desired screen-space size in pixels")]
+    public float screenPixelSize = 8f;
 
     private float _sphereRadius = 100f;
     private GameObject _marker;
@@ -126,18 +128,22 @@ public class GpsMarker : MonoBehaviour
     {
         if (_marker == null) return;
 
-        // Keep marker at constant screen size regardless of camera distance
-        Camera cam = Camera.current;
+        // Constant screen-size: scale world size so dot stays ~screenPixelSize px
+        Camera cam = Camera.main;
 #if UNITY_EDITOR
-        if (cam == null)
-            cam = UnityEditor.SceneView.lastActiveSceneView?.camera;
+        if (!Application.isPlaying)
+        {
+            cam = Camera.current;
+            if (cam == null)
+                cam = UnityEditor.SceneView.lastActiveSceneView?.camera;
+        }
 #endif
-        if (cam == null) cam = Camera.main;
         if (cam != null)
         {
             float dist = Vector3.Distance(cam.transform.position, _marker.transform.position);
-            float screenScale = dist * 0.01f;
-            _marker.transform.localScale = Vector3.one * markerSize * screenScale;
+            float frustumHeight = 2f * dist * Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad);
+            float pixelRatio = screenPixelSize / Screen.height;
+            _marker.transform.localScale = Vector3.one * frustumHeight * pixelRatio;
         }
 
         // Pulse animation (play mode only)
