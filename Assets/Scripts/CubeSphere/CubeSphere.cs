@@ -21,6 +21,8 @@ public class CubeSphere : MonoBehaviour
     private float _lastRadius;
     private int _lastResolution;
 
+    // Axis names use geographic convention (Z-up), not Unity axes.
+    // e.g. "PosZ_North" is geographic +Z, which maps to Unity +Y. See S2Geometry for full mapping.
     private static readonly string[] FaceNames = {
         "Face0_PosX", "Face1_PosY", "Face2_PosZ_North",
         "Face3_NegX", "Face4_NegY", "Face5_NegZ_South"

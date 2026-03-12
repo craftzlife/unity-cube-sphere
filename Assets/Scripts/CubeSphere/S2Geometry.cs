@@ -2,13 +2,32 @@ using UnityEngine;
 
 /// <summary>
 /// S2 Geometry utilities for cube-sphere coordinate conversions.
-/// Internal math uses geographic convention (Z-up).
-/// Use GeoToUnity/UnityToGeo for Unity coordinate conversion (Y-up).
-/// Face mapping: 0=+X, 1=+Y, 2=+Z(north), 3=-X, 4=-Y, 5=-Z(south)
+///
+/// Coordinate system mapping:
+///   Geographic (Z-up)       Unity (Y-up)
+///   ─────────────────       ────────────
+///   X  (lon 0°/180°)   →   X  (unchanged)
+///   Y  (lon 90°/270°)  →   Z
+///   Z  (poles/up)       →   Y
+///
+/// In Unity world space:
+///   North Pole  = +Y     South Pole = -Y
+///   Equator lies in the XZ plane
+///
+/// S2 face index → geographic dominant axis → Unity axis:
+///   Face 0: +X → +X       Face 3: -X → -X
+///   Face 1: +Y → +Z       Face 4: -Y → -Z
+///   Face 2: +Z (north) → +Y   Face 5: -Z (south) → -Y
+///
+/// GeoToUnity / UnityToGeo handle the Y↔Z swap at the boundary.
+/// All internal math (LatLonToPoint, GetFace, FaceUVToXYZ, etc.)
+/// operates in geographic Z-up coordinates.
 /// </summary>
 public static class S2Geometry
 {
+    /// Geographic (X,Y,Z) → Unity (X,Z,Y): swaps Y↔Z so geographic Z-up becomes Unity Y-up.
     public static Vector3 GeoToUnity(Vector3 geo) => new Vector3(geo.x, geo.z, geo.y);
+    /// Unity (X,Y,Z) → Geographic (X,Z,Y): reverses the swap for internal S2 math.
     public static Vector3 UnityToGeo(Vector3 unity) => new Vector3(unity.x, unity.z, unity.y);
 
     /// <summary>Convert latitude/longitude (degrees) to unit sphere point (Z-up).</summary>
