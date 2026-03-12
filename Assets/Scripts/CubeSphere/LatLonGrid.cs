@@ -18,6 +18,8 @@ public class LatLonGrid : MonoBehaviour
 
     [Header("Label Settings")]
     public Color labelColor = new Color(1f, 0.95f, 0f, 1f);
+    [Range(0.1f, 5f)]
+    public float labelScale = 1f;
 
     private CubeSphere _cubeSphere;
     private GameObject _gridParent;
@@ -227,17 +229,26 @@ public class LatLonGrid : MonoBehaviour
 
         Quaternion rot = Quaternion.LookRotation(cam.transform.forward, cam.transform.up);
 
+        // FOV-based scaling: keep labels at a consistent apparent size across FOV changes
+        const float referenceFov = 60f;
+        float fovFactor = Mathf.Tan(referenceFov * 0.5f * Mathf.Deg2Rad)
+                        / Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad);
+
         foreach (Transform child in labels)
         {
             Vector3 labelDir = (child.position - sphereCenter).normalized;
-            bool visible = Vector3.Dot(labelDir, camDir) > 0.2f;
+            float dot = Vector3.Dot(labelDir, camDir);
+            bool visible = dot > 0.2f;
             child.gameObject.SetActive(visible);
             if (visible)
             {
                 child.rotation = rot;
                 float distToLabel = Vector3.Distance(camPos, child.position);
-                float scale = distToLabel / referenceDist;
-                child.localScale = Vector3.one * scale;
+                // Constant screen size: cancels perspective so labels don't grow/shrink with zoom
+                float baseScale = (distToLabel / referenceDist) * labelScale * fovFactor;
+                // Depth boost: labels facing the camera appear larger than those near the edges
+                float depthFactor = Mathf.Lerp(0.7f, 1.3f, Mathf.InverseLerp(0.2f, 1f, dot));
+                child.localScale = Vector3.one * baseScale * depthFactor;
             }
         }
 
