@@ -37,6 +37,12 @@ public class EarthCamera : MonoBehaviour
     void OnEnable()
     {
         Instance = this;
+        ApplyOrbit();
+    }
+
+    void Start()
+    {
+        // Deferred to Start so CubeSphere.OnEnable has already set target.rotation
         InitializeFromGps();
         ApplyOrbit();
     }
@@ -49,7 +55,11 @@ public class EarthCamera : MonoBehaviour
     void InitializeFromGps()
     {
         var gps = FindAnyObjectByType<GpsMarker>();
-        if (gps == null || target == null) return;
+        if (gps == null || target == null)
+        {
+            Debug.LogWarning($"[EarthCamera] GPS init skipped: gps={gps != null}, target={target != null}");
+            return;
+        }
         Vector3 gpsLocal = S2Geometry.LatLonToUnityPosition(gps.latitude, gps.longitude, 1f);
         Vector3 dir = (target.rotation * gpsLocal).normalized;
         _pitch = Mathf.Asin(dir.y) * Mathf.Rad2Deg;
