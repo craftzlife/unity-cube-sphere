@@ -7,7 +7,7 @@ using UnityEditor;
 [ExecuteAlways]
 public class CubeSphere : MonoBehaviour
 {
-    public static Quaternion TiltRotation { get; private set; } = Quaternion.identity;
+    public static Quaternion EarthRotation { get; private set; } = Quaternion.identity;
 
     [Header("Sphere Settings")]
     public float radius = 100f;
@@ -36,11 +36,20 @@ public class CubeSphere : MonoBehaviour
         _lastResolution = faceResolution;
 
         var utc = System.DateTime.UtcNow;
+
+        // Axial tilt (23.44°) with seasonal axis
         float phi = 2f * Mathf.PI / 365f * (utc.DayOfYear - 81);
         float alpha = Mathf.PI * 0.5f - phi;
         Vector3 tiltAxis = new Vector3(Mathf.Sin(alpha), 0f, -Mathf.Cos(alpha));
-        TiltRotation = Quaternion.AngleAxis(23.44f, tiltAxis);
-        transform.rotation = TiltRotation;
+        Quaternion tilt = Quaternion.AngleAxis(23.44f, tiltAxis);
+
+        // Time-of-day rotation: Earth rotates 15°/hour, lon 0° faces the sun at UTC noon
+        float utcHours = utc.Hour + utc.Minute / 60f + utc.Second / 3600f;
+        float hourAngle = 15f * (utcHours - 12f);
+        Quaternion timeRot = Quaternion.AngleAxis(-hourAngle, Vector3.up);
+
+        EarthRotation = tilt * timeRot;
+        transform.rotation = EarthRotation;
     }
 
     void OnValidate()
