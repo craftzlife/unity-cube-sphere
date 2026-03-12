@@ -7,6 +7,8 @@ using UnityEditor;
 [ExecuteAlways]
 public class CubeSphere : MonoBehaviour
 {
+    public static Quaternion TiltRotation { get; private set; } = Quaternion.identity;
+
     [Header("Sphere Settings")]
     public float radius = 100f;
     [Range(4, 128)]
@@ -32,6 +34,13 @@ public class CubeSphere : MonoBehaviour
 
         _lastRadius = radius;
         _lastResolution = faceResolution;
+
+        var utc = System.DateTime.UtcNow;
+        float phi = 2f * Mathf.PI / 365f * (utc.DayOfYear - 81);
+        float alpha = Mathf.PI * 0.5f - phi;
+        Vector3 tiltAxis = new Vector3(Mathf.Sin(alpha), 0f, -Mathf.Cos(alpha));
+        TiltRotation = Quaternion.AngleAxis(23.44f, tiltAxis);
+        transform.rotation = TiltRotation;
     }
 
     void OnValidate()

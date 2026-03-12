@@ -31,6 +31,9 @@ public class RealtimeSunLight : MonoBehaviour
         // Sun direction in Unity world space
         Vector3 sunDir = S2Geometry.LatLonToUnityPosition(declination, subsolarLon, 1f).normalized;
 
+        // Rotate sun direction by the globe's axial tilt
+        sunDir = CubeSphere.TiltRotation * sunDir;
+
         // Light shines from the sun toward the origin
         transform.rotation = Quaternion.LookRotation(-sunDir);
     }

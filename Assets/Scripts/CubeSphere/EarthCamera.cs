@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[ExecuteAlways]
 [RequireComponent(typeof(Camera))]
 public class EarthCamera : MonoBehaviour
 {
@@ -31,33 +32,57 @@ public class EarthCamera : MonoBehaviour
         _mouse = Mouse.current;
     }
 
+    void OnEnable()
+    {
+        Instance = this;
+        InitializeFromGps();
+        ApplyOrbit();
+    }
+
     void OnDestroy()
     {
         if (Instance == this) Instance = null;
     }
 
-    void LateUpdate()
+    void InitializeFromGps()
     {
-        if (_mouse == null) { _mouse = Mouse.current; if (_mouse == null) return; }
+        var gps = FindAnyObjectByType<GpsMarker>();
+        if (gps == null || target == null) return;
+        Vector3 gpsLocal = S2Geometry.LatLonToUnityPosition(gps.latitude, gps.longitude, 1f);
+        Vector3 dir = (target.rotation * gpsLocal).normalized;
+        _pitch = Mathf.Asin(dir.y) * Mathf.Rad2Deg;
+        _yaw = Mathf.Atan2(-dir.x, -dir.z) * Mathf.Rad2Deg;
+    }
 
-        if (_mouse.leftButton.isPressed)
-        {
-            Vector2 delta = _mouse.delta.ReadValue();
-            _yaw += delta.x * rotationSpeed * 0.1f;
-            _pitch -= delta.y * rotationSpeed * 0.1f;
-            _pitch = Mathf.Clamp(_pitch, -89f, 89f);
-        }
-
-        float scroll = _mouse.scroll.ReadValue().y;
-        distance -= scroll * zoomSpeed * 0.01f;
-        distance = Mathf.Clamp(distance, minDistance, maxDistance);
-
+    void ApplyOrbit()
+    {
         Vector3 targetPos = target != null ? target.position : Vector3.zero;
         Quaternion rotation = Quaternion.Euler(_pitch, _yaw, 0);
         Vector3 offset = rotation * new Vector3(0, 0, -distance);
-
         transform.position = targetPos + offset;
         transform.LookAt(targetPos);
+    }
+
+    void LateUpdate()
+    {
+        if (Application.isPlaying)
+        {
+            if (_mouse == null) { _mouse = Mouse.current; if (_mouse == null) return; }
+
+            if (_mouse.leftButton.isPressed)
+            {
+                Vector2 delta = _mouse.delta.ReadValue();
+                _yaw += delta.x * rotationSpeed * 0.1f;
+                _pitch -= delta.y * rotationSpeed * 0.1f;
+                _pitch = Mathf.Clamp(_pitch, -89f, 89f);
+            }
+
+            float scroll = _mouse.scroll.ReadValue().y;
+            distance -= scroll * zoomSpeed * 0.01f;
+            distance = Mathf.Clamp(distance, minDistance, maxDistance);
+        }
+
+        ApplyOrbit();
 
         int lod = ComputeLod(distance, minDistance, maxDistance);
         if (lod != currentLod)
