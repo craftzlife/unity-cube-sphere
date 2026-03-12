@@ -40,7 +40,7 @@ public class EarthCamera : MonoBehaviour
     {
         if (_mouse == null) { _mouse = Mouse.current; if (_mouse == null) return; }
 
-        if (_mouse.rightButton.isPressed || _mouse.middleButton.isPressed)
+        if (_mouse.leftButton.isPressed)
         {
             Vector2 delta = _mouse.delta.ReadValue();
             _yaw += delta.x * rotationSpeed * 0.1f;

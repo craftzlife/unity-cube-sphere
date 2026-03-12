@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 4735b0abd2ad649588dad4ee6f3c9075, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -130,6 +130,7 @@ GameObject:
   - component: {fileID: 1128350705}
   - component: {fileID: 1128350704}
   - component: {fileID: 1128350703}
+  - component: {fileID: 1128350706}
   m_Layer: 0
   m_Name: Directional Light
   m_TagString: Untagged
@@ -239,13 +240,30 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1128350702}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.40821794, y: -0.23456973, z: 0.10938166, w: 0.8754261}
+  m_LocalRotation: {x: 0.0018690134, y: 0.99796283, z: 0.0349814, w: -0.05331994}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1128350706
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1128350702}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57caf87bcacf440159573b952fe76521, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RealtimeSunLight
+  useCustomTime: 0
+  month: 6
+  day: 21
+  hour: 12
+  minute: 0
 --- !u!1 &1198263917
 GameObject:
   m_ObjectHideFlags: 0
@@ -477,7 +495,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElevationTileLoader
   serverUrl: http://localhost:8000
-  targetLod: 10
+  targetLod: 1
 --- !u!114 &1408452222
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -519,14 +537,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1408452220}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.6188939, y: -0.26128167, z: 0.39122847, w: -0.62900114}
-  m_LocalPosition: {x: -0.31574386, y: -0.035649434, z: -1.1609255}
+  m_LocalRotation: {x: 0.10332881, y: -0.45249903, z: -0.10146582, w: -0.8799275}
+  m_LocalPosition: {x: -0.3157426, y: -0.035650693, z: -1.1609236}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1198263918}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: -35.039, y: 443.168, z: -95.058}
+  m_LocalEulerAnglesHint: {x: -15.883, y: 413.72, z: 5.073}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
