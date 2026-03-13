@@ -3,9 +3,6 @@ using UnityEngine.Networking;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 [ExecuteAlways]
 [RequireComponent(typeof(CubeSphere))]
@@ -76,19 +73,8 @@ public class ElevationTileLoader : MonoBehaviour
 
         if (EarthCamera.Instance != null)
             EarthCamera.Instance.OnLodChanged -= OnEarthLodChanged;
-
-#if UNITY_EDITOR
-        EditorApplication.update -= EditorPumpUpdate;
-#endif
     }
 
-#if UNITY_EDITOR
-    void EditorPumpUpdate()
-    {
-        if (!Application.isPlaying && _isLoading)
-            EditorApplication.QueuePlayerLoopUpdate();
-    }
-#endif
 
     void OnEarthLodChanged(int earthLod)
     {
@@ -123,10 +109,6 @@ public class ElevationTileLoader : MonoBehaviour
     IEnumerator ReloadTilesCoroutine()
     {
         _isLoading = true;
-#if UNITY_EDITOR
-        if (!Application.isPlaying)
-            EditorApplication.update += EditorPumpUpdate;
-#endif
 
         ApplyOceanToAllFaces();
         yield return LoadBestLodPerFace();
@@ -137,10 +119,6 @@ public class ElevationTileLoader : MonoBehaviour
     IEnumerator LoadManifestAndTiles()
     {
         _isLoading = true;
-#if UNITY_EDITOR
-        if (!Application.isPlaying)
-            EditorApplication.update += EditorPumpUpdate;
-#endif
 
         string url = $"{serverUrl}/manifest.json";
         using (UnityWebRequest req = UnityWebRequest.Get(url))
@@ -183,9 +161,6 @@ public class ElevationTileLoader : MonoBehaviour
     {
         _isLoading = false;
         _loadCoroutine = null;
-#if UNITY_EDITOR
-        EditorApplication.update -= EditorPumpUpdate;
-#endif
     }
 
     void ApplyOceanToAllFaces()

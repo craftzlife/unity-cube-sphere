@@ -1,8 +1,5 @@
 using UnityEngine;
 using System.Collections;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 [ExecuteAlways]
 public class GpsMarker : MonoBehaviour
@@ -45,20 +42,6 @@ public class GpsMarker : MonoBehaviour
     void OnValidate()
     {
         if (!isActiveAndEnabled) return;
-#if UNITY_EDITOR
-        EditorApplication.delayCall += () =>
-        {
-            if (this == null || !isActiveAndEnabled) return;
-            if (_marker != null)
-            {
-                DestroyImmediate(_marker);
-                _marker = null;
-                _pulse = null;
-                _pulseMat = null;
-            }
-            CreateMarker();
-        };
-#endif
     }
 
     void CleanupOrphanMarkers()
@@ -130,14 +113,6 @@ public class GpsMarker : MonoBehaviour
 
         // Constant screen-size: scale world size so dot stays ~screenPixelSize px
         Camera cam = Camera.main;
-#if UNITY_EDITOR
-        if (!Application.isPlaying)
-        {
-            cam = Camera.current;
-            if (cam == null)
-                cam = UnityEditor.SceneView.lastActiveSceneView?.camera;
-        }
-#endif
         if (cam != null)
         {
             float dist = Vector3.Distance(cam.transform.position, _marker.transform.position);

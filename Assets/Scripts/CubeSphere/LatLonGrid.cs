@@ -1,7 +1,4 @@
 using UnityEngine;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 [ExecuteAlways]
 [RequireComponent(typeof(CubeSphere))]
@@ -63,18 +60,12 @@ public class LatLonGrid : MonoBehaviour
     void OnEnable()
     {
         _cubeSphere = GetComponent<CubeSphere>();
-#if UNITY_EDITOR
-        SceneView.duringSceneGui += OnSceneGUI;
-#endif
         _currentLod = -1;
         CheckLod();
     }
 
     void OnDisable()
     {
-#if UNITY_EDITOR
-        SceneView.duringSceneGui -= OnSceneGUI;
-#endif
         if (_gridParent != null)
             DestroyImmediate(_gridParent);
         _currentLod = -1;
@@ -83,29 +74,10 @@ public class LatLonGrid : MonoBehaviour
         _minorBaseColors = null;
     }
 
-#if UNITY_EDITOR
-    void OnSceneGUI(SceneView sv)
-    {
-        if (this == null || !isActiveAndEnabled) return;
-        if (!Application.isPlaying)
-        {
-            CheckLodWithCamera(sv.camera);
-            UpdateVisuals(sv.camera);
-        }
-    }
-#endif
-
     void OnValidate()
     {
         if (!isActiveAndEnabled) return;
         _currentLod = -1;
-#if UNITY_EDITOR
-        EditorApplication.delayCall += () =>
-        {
-            if (this != null && isActiveAndEnabled)
-                CheckLod();
-        };
-#endif
     }
 
     void Update()
@@ -155,12 +127,6 @@ public class LatLonGrid : MonoBehaviour
 
     Camera GetActiveCamera()
     {
-        if (Application.isPlaying)
-            return Camera.main;
-#if UNITY_EDITOR
-        var sv = SceneView.lastActiveSceneView;
-        if (sv != null) return sv.camera;
-#endif
         return Camera.main;
     }
 
@@ -331,11 +297,6 @@ public class LatLonGrid : MonoBehaviour
                 child.localScale = Vector3.one * baseScale * depthFactor;
             }
         }
-
-#if UNITY_EDITOR
-        if (!Application.isPlaying)
-            SceneView.RepaintAll();
-#endif
     }
 
     // ----------------------------------------------------------------

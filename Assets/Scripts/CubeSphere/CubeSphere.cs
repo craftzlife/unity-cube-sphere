@@ -1,8 +1,5 @@
 using UnityEngine;
 using UnityEngine.Rendering;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 [ExecuteAlways]
 public class CubeSphere : MonoBehaviour
@@ -61,13 +58,6 @@ public class CubeSphere : MonoBehaviour
         {
             _lastRadius = radius;
             _lastResolution = faceResolution;
-#if UNITY_EDITOR
-            EditorApplication.delayCall += () =>
-            {
-                if (this != null && isActiveAndEnabled)
-                    GenerateCubeSphere();
-            };
-#endif
         }
     }
 
