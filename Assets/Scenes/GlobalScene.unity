@@ -240,7 +240,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1128350702}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.0020085287, y: -0.7008859, z: 0.0019736618, w: 0.71326786}
+  m_LocalRotation: {x: 0.0013753679, y: -0.70236164, z: 0.001357097, w: 0.7118177}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -393,11 +393,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EarthCamera
   target: {fileID: 1408452224}
   distance: 300
-  rotationSpeed: 5
+  rotationSpeed: 10
   zoomSpeed: 50
   minDistance: 102
   maxDistance: 300
-  currentLod: 0
+  currentLod: 1
 --- !u!20 &1302869465
 Camera:
   m_ObjectHideFlags: 0
@@ -431,7 +431,7 @@ Camera:
     height: 1
   near clip plane: 20
   far clip plane: 450
-  field of view: 60.000004
+  field of view: 55.900013
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
@@ -457,8 +457,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1302869462}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.015057776, y: 0.9802863, z: 0.0825109, w: -0.17889678}
-  m_LocalPosition: {x: 104.47655, y: -50.14684, z: 276.7127}
+  m_LocalRotation: {x: -0.013831547, y: 0.8556233, z: 0.022894986, w: 0.5169075}
+  m_LocalPosition: {x: -265.17688, y: -16.043468, z: 139.36946}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -543,14 +543,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1408452220}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.18002121, y: 0.31423238, z: 0.09409468, w: 0.92736006}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1198263918}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: -3.098, y: 23.502, z: 0.548}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
