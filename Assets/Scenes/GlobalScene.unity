@@ -240,7 +240,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1128350702}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.002111769, y: -0.7004655, z: 0.002072667, w: 0.71368015}
+  m_LocalRotation: {x: 0.0031679524, y: -0.69818646, z: 0.0030895583, w: 0.71590227}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -393,11 +393,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EarthCamera
   target: {fileID: 1408452224}
   distance: 300
-  rotationSpeed: 1
+  rotationSpeed: 5
   zoomSpeed: 50
   minDistance: 102
-  maxDistance: 5000
-  currentLod: 7
+  maxDistance: 300
+  currentLod: 0
 --- !u!20 &1302869465
 Camera:
   m_ObjectHideFlags: 0
@@ -416,7 +416,7 @@ Camera:
   m_ShutterSpeed: 0.005
   m_Aperture: 16
   m_FocusDistance: 10
-  m_FocalLength: 50
+  m_FocalLength: 20.78461
   m_BladeCount: 5
   m_Curvature: {x: 2, y: 11}
   m_BarrelClipping: 0.25
@@ -431,7 +431,7 @@ Camera:
     height: 1
   near clip plane: 20
   far clip plane: 450
-  field of view: 60
+  field of view: 60.000004
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
@@ -457,13 +457,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1302869462}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.013638272, y: 0.98507816, z: -0.093317635, w: 0.14396812}
-  m_LocalPosition: {x: -84.32832, y: 56.3332, z: 282.33908}
+  m_LocalRotation: {x: 0.059751447, y: -0.7692819, z: 0.072737806, w: 0.63193697}
+  m_LocalPosition: {x: 289.0749, y: 56.229015, z: 57.21894}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -101.196, z: 0}
 --- !u!1 &1408452220
 GameObject:
   m_ObjectHideFlags: 0
@@ -496,7 +496,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElevationTileLoader
   serverUrl: http://localhost:8000
-  targetLod: 2
+  targetLod: 0
 --- !u!114 &1408452222
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -515,8 +515,10 @@ MonoBehaviour:
   primeMeridianColor: {r: 1, g: 0.2, b: 0.2, a: 0.6}
   lineWidth: 0.05
   pointsPerLine: 360
+  minorAlphaBase: 0.8
+  minorWidthFactor: 0.6
   labelColor: {r: 1, g: 1, b: 0.7, a: 1}
-  labelScale: 2
+  labelScale: 0.8
 --- !u!114 &1408452223
 MonoBehaviour:
   m_ObjectHideFlags: 0

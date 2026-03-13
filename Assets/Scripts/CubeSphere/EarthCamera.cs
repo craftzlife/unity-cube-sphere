@@ -13,7 +13,7 @@ public class EarthCamera : MonoBehaviour
     public float rotationSpeed = 5f;
     public float zoomSpeed = 50f;
     public float minDistance = 101f;
-    public float maxDistance = 5000f;
+    public float maxDistance = 300f;
 
     [Header("LOD")]
     [Range(0, 10)]
@@ -115,6 +115,7 @@ public class EarthCamera : MonoBehaviour
         if (lod != currentLod)
         {
             currentLod = lod;
+            Debug.Log($"[EarthCamera] LOD {currentLod} | dist={distance:F1} effDist={effectiveDistance:F1} fov={_cam.fieldOfView:F1} progress={progress:F2}");
             if (currentLod != _previousLod)
             {
                 _previousLod = currentLod;

@@ -12,13 +12,13 @@ public class LatLonGrid : MonoBehaviour
     public Color longitudeColor = new Color(1f, 1f, 1f, 0.35f);
     public Color equatorColor = new Color(1f, 0.8f, 0f, 0.6f);
     public Color primeMeridianColor = new Color(1f, 0.2f, 0.2f, 0.6f);
-    public float lineWidth = 0.5f;
+    public float lineWidth = 0.1f;
     [Range(36, 360)]
     public int pointsPerLine = 180;
 
     [Header("Minor Line Settings")]
-    [Range(0.05f, 0.5f)]
-    public float minorAlphaBase = 0.15f;
+    [Range(0.1f, 1.0f)]
+    public float minorAlphaBase = 0.8f;
     [Range(0.3f, 1f)]
     public float minorWidthFactor = 0.6f;
 
@@ -47,17 +47,17 @@ public class LatLonGrid : MonoBehaviour
 
     // LOD 0 = farthest (coarsest), LOD 10 = closest (finest)
     private static readonly GridParams[] LodToGrid = {
-        new GridParams { majorSpacing = 30f, minorSpacing = 0f,  labelSpacing = 30f, charSize = 1.2f  }, // LOD 0
-        new GridParams { majorSpacing = 30f, minorSpacing = 0f,  labelSpacing = 30f, charSize = 1.1f  }, // LOD 1
-        new GridParams { majorSpacing = 30f, minorSpacing = 15f, labelSpacing = 30f, charSize = 0.9f  }, // LOD 2
-        new GridParams { majorSpacing = 30f, minorSpacing = 15f, labelSpacing = 30f, charSize = 0.8f  }, // LOD 3
-        new GridParams { majorSpacing = 15f, minorSpacing = 5f,  labelSpacing = 30f, charSize = 0.65f }, // LOD 4
-        new GridParams { majorSpacing = 15f, minorSpacing = 5f,  labelSpacing = 30f, charSize = 0.55f }, // LOD 5
-        new GridParams { majorSpacing = 10f, minorSpacing = 5f,  labelSpacing = 30f, charSize = 0.45f }, // LOD 6
-        new GridParams { majorSpacing = 10f, minorSpacing = 5f,  labelSpacing = 30f, charSize = 0.4f  }, // LOD 7
-        new GridParams { majorSpacing = 10f, minorSpacing = 2f,  labelSpacing = 30f, charSize = 0.3f  }, // LOD 8
-        new GridParams { majorSpacing = 10f, minorSpacing = 2f,  labelSpacing = 15f, charSize = 0.25f }, // LOD 9
-        new GridParams { majorSpacing = 5f,  minorSpacing = 1f,  labelSpacing = 15f, charSize = 0.2f  }, // LOD 10
+        new GridParams { majorSpacing = 20f, minorSpacing = 0f,  labelSpacing = 20f, charSize = 0.8f  }, // LOD 0
+        new GridParams { majorSpacing = 20f, minorSpacing = 0f,  labelSpacing = 20f, charSize = 0.8f  }, // LOD 1
+        new GridParams { majorSpacing = 20f, minorSpacing = 0f,  labelSpacing = 20f, charSize = 0.8f  }, // LOD 2
+        new GridParams { majorSpacing = 20f, minorSpacing = 0f,  labelSpacing = 20f, charSize = 0.8f  }, // LOD 3
+        new GridParams { majorSpacing = 20f, minorSpacing = 10f, labelSpacing = 20f, charSize = 0.65f }, // LOD 4
+        new GridParams { majorSpacing = 20f, minorSpacing = 10f, labelSpacing = 20f, charSize = 0.55f }, // LOD 5
+        new GridParams { majorSpacing = 20f, minorSpacing = 10f, labelSpacing = 20f, charSize = 0.55f }, // LOD 6
+        new GridParams { majorSpacing = 10f, minorSpacing = 5f,  labelSpacing = 10f, charSize = 0.45f }, // LOD 7
+        new GridParams { majorSpacing = 10f, minorSpacing = 5f,  labelSpacing = 10f, charSize = 0.4f  }, // LOD 8
+        new GridParams { majorSpacing = 5f,  minorSpacing = 0f,  labelSpacing = 5f,  charSize = 0.45f }, // LOD 9
+        new GridParams { majorSpacing = 5f,  minorSpacing = 1f,  labelSpacing = 5f,  charSize = 0.4f  }, // LOD 10
     };
 
     void OnEnable()
@@ -204,7 +204,7 @@ public class LatLonGrid : MonoBehaviour
         {
             for (float lat = -90f + gp.minorSpacing; lat < 90f; lat += gp.minorSpacing)
             {
-                if (IsMajorPosition(lat, gp.majorSpacing)) continue;
+                if (IsMajorPosition(lat, gp.majorSpacing, -90f)) continue;
                 Color col = latitudeColor;
                 col.a *= minorAlphaBase;
                 minorColorList.Add(col);
@@ -214,7 +214,7 @@ public class LatLonGrid : MonoBehaviour
             // --- Minor longitude lines ---
             for (float lon = -180f; lon < 180f; lon += gp.minorSpacing)
             {
-                if (IsMajorPosition(lon, gp.majorSpacing)) continue;
+                if (IsMajorPosition(lon, gp.majorSpacing, -180f)) continue;
                 Color col = longitudeColor;
                 col.a *= minorAlphaBase;
                 minorColorList.Add(col);
@@ -225,6 +225,8 @@ public class LatLonGrid : MonoBehaviour
         _majorLines = majorList.ToArray();
         _minorLines = minorList.ToArray();
         _minorBaseColors = minorColorList.ToArray();
+
+        Debug.Log($"[LatLonGrid] LOD {_currentLod} rebuilt: {_majorLines.Length} major, {_minorLines.Length} minor (major={gp.majorSpacing}° minor={gp.minorSpacing}°)");
 
         // --- Labels at major intersections only ---
         GameObject labelsGo = new GameObject("Labels");
@@ -250,9 +252,10 @@ public class LatLonGrid : MonoBehaviour
         }
     }
 
-    static bool IsMajorPosition(float value, float majorSpacing)
+    static bool IsMajorPosition(float value, float majorSpacing, float rangeStart)
     {
-        float remainder = Mathf.Abs(value % majorSpacing);
+        float offset = value - rangeStart;
+        float remainder = Mathf.Abs(offset % majorSpacing);
         return remainder < 0.01f || (majorSpacing - remainder) < 0.01f;
     }
 
