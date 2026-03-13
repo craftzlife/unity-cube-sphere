@@ -142,8 +142,8 @@ public class CubeSphere : MonoBehaviour
                 int idx = j * (res + 1) + i;
                 vertices[idx] = S2Geometry.GeoToUnity(sphereDir * radius);
                 normals[idx] = S2Geometry.GeoToUnity(sphereDir);
-                // S2 negative faces have u,v axes rotated 90° from geographic (east, north).
-                // Rotate UVs so tile textures (which are north-up) display correctly.
+                // Data tiles use uniform UV (no axis rotation on negative faces).
+                // Remap to match S2 standard mesh geometry on faces 3,4,5.
                 uvs[idx] = face >= 3 ? new Vector2(t, 1f - s) : new Vector2(s, t);
             }
         }
