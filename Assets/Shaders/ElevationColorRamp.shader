@@ -8,6 +8,7 @@ Shader "CubeSphere/ElevationColorRamp"
         _ElevScale ("Elevation Scale", Float) = 1.0
         _MaxLandElev ("Max Land Elevation", Float) = 1500
         _MaxDepth ("Max Water Depth", Float) = 100
+        _NightBrightness ("Night Side Brightness", Range(0, 1)) = 0.10
     }
     SubShader
     {
@@ -51,6 +52,7 @@ Shader "CubeSphere/ElevationColorRamp"
                 float _ElevScale;
                 float _MaxLandElev;
                 float _MaxDepth;
+                float _NightBrightness;
             CBUFFER_END
 
             half3 WaterColor(float depth01)
@@ -109,8 +111,8 @@ Shader "CubeSphere/ElevationColorRamp"
                 float3 normalWS = normalize(input.normalWS);
                 Light mainLight = GetMainLight();
                 float NdotL = saturate(dot(normalWS, mainLight.direction));
-                half3 ambient = half3(0.30, 0.30, 0.35);
-                color *= ambient + NdotL * 0.70 * mainLight.color.rgb;
+                half3 ambient = half3(1.0, 1.0, 1.17) * _NightBrightness;
+                color *= ambient + NdotL * (1.0 - _NightBrightness) * mainLight.color.rgb;
 
                 return half4(color, 1);
             }
