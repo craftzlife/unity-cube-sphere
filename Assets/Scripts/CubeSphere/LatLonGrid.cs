@@ -16,6 +16,12 @@ public class LatLonGrid : MonoBehaviour
     [Range(36, 360)]
     public int pointsPerLine = 180;
 
+    [Header("Minor Line Settings")]
+    [Range(0.05f, 0.5f)]
+    public float minorAlphaBase = 0.15f;
+    [Range(0.3f, 1f)]
+    public float minorWidthFactor = 0.6f;
+
     [Header("Label Settings")]
     public Color labelColor = new Color(1f, 0.95f, 0f, 1f);
     [Range(0.1f, 5f)]
@@ -26,26 +32,32 @@ public class LatLonGrid : MonoBehaviour
     private int _currentLod = -1;
     private float _gridCreationDist;
 
+    // Cached renderers for fast per-frame updates
+    private LineRenderer[] _majorLines;
+    private LineRenderer[] _minorLines;
+    private Color[] _minorBaseColors;
+
     struct GridParams
     {
-        public float gridSpacing;
+        public float majorSpacing;
+        public float minorSpacing; // 0 = no minor lines
         public float labelSpacing;
         public float charSize;
     }
 
     // LOD 0 = farthest (coarsest), LOD 10 = closest (finest)
     private static readonly GridParams[] LodToGrid = {
-        new GridParams { gridSpacing = 30f, labelSpacing = 30f, charSize = 1.2f  }, // LOD 0
-        new GridParams { gridSpacing = 30f, labelSpacing = 30f, charSize = 1.1f  }, // LOD 1
-        new GridParams { gridSpacing = 15f, labelSpacing = 15f, charSize = 0.9f  }, // LOD 2
-        new GridParams { gridSpacing = 15f, labelSpacing = 15f, charSize = 0.8f  }, // LOD 3
-        new GridParams { gridSpacing = 10f, labelSpacing = 30f, charSize = 0.65f }, // LOD 4
-        new GridParams { gridSpacing = 10f, labelSpacing = 30f, charSize = 0.55f }, // LOD 5
-        new GridParams { gridSpacing = 5f,  labelSpacing = 30f, charSize = 0.45f }, // LOD 6
-        new GridParams { gridSpacing = 5f,  labelSpacing = 30f, charSize = 0.4f  }, // LOD 7
-        new GridParams { gridSpacing = 2f,  labelSpacing = 15f, charSize = 0.3f  }, // LOD 8
-        new GridParams { gridSpacing = 2f,  labelSpacing = 15f, charSize = 0.25f }, // LOD 9
-        new GridParams { gridSpacing = 1f,  labelSpacing = 10f, charSize = 0.2f  }, // LOD 10
+        new GridParams { majorSpacing = 30f, minorSpacing = 0f,  labelSpacing = 30f, charSize = 1.2f  }, // LOD 0
+        new GridParams { majorSpacing = 30f, minorSpacing = 0f,  labelSpacing = 30f, charSize = 1.1f  }, // LOD 1
+        new GridParams { majorSpacing = 30f, minorSpacing = 15f, labelSpacing = 30f, charSize = 0.9f  }, // LOD 2
+        new GridParams { majorSpacing = 30f, minorSpacing = 15f, labelSpacing = 30f, charSize = 0.8f  }, // LOD 3
+        new GridParams { majorSpacing = 15f, minorSpacing = 5f,  labelSpacing = 30f, charSize = 0.65f }, // LOD 4
+        new GridParams { majorSpacing = 15f, minorSpacing = 5f,  labelSpacing = 30f, charSize = 0.55f }, // LOD 5
+        new GridParams { majorSpacing = 10f, minorSpacing = 5f,  labelSpacing = 30f, charSize = 0.45f }, // LOD 6
+        new GridParams { majorSpacing = 10f, minorSpacing = 5f,  labelSpacing = 30f, charSize = 0.4f  }, // LOD 7
+        new GridParams { majorSpacing = 10f, minorSpacing = 2f,  labelSpacing = 30f, charSize = 0.3f  }, // LOD 8
+        new GridParams { majorSpacing = 10f, minorSpacing = 2f,  labelSpacing = 15f, charSize = 0.25f }, // LOD 9
+        new GridParams { majorSpacing = 5f,  minorSpacing = 1f,  labelSpacing = 15f, charSize = 0.2f  }, // LOD 10
     };
 
     void OnEnable()
@@ -66,6 +78,9 @@ public class LatLonGrid : MonoBehaviour
         if (_gridParent != null)
             DestroyImmediate(_gridParent);
         _currentLod = -1;
+        _majorLines = null;
+        _minorLines = null;
+        _minorBaseColors = null;
     }
 
 #if UNITY_EDITOR
@@ -162,25 +177,56 @@ public class LatLonGrid : MonoBehaviour
         float lineR = r * 1.005f;
         float labelR = r * 1.04f;
 
-        // --- Latitude lines ---
-        for (float lat = -90f + gp.gridSpacing; lat < 90f; lat += gp.gridSpacing)
+        var majorList = new System.Collections.Generic.List<LineRenderer>();
+        var minorList = new System.Collections.Generic.List<LineRenderer>();
+        var minorColorList = new System.Collections.Generic.List<Color>();
+
+        // --- Major latitude lines ---
+        for (float lat = -90f + gp.majorSpacing; lat < 90f; lat += gp.majorSpacing)
         {
             bool isEquator = Mathf.Abs(lat) < 0.01f;
             Color col = isEquator ? equatorColor : latitudeColor;
             float w = isEquator ? lineWidth * 2.5f : lineWidth;
-            CreateLatitudeLine(lat, lineR, col, w);
+            majorList.Add(CreateLatitudeLine(lat, lineR, col, w));
         }
 
-        // --- Longitude lines ---
-        for (float lon = -180f; lon < 180f; lon += gp.gridSpacing)
+        // --- Major longitude lines ---
+        for (float lon = -180f; lon < 180f; lon += gp.majorSpacing)
         {
             bool isPrime = Mathf.Abs(lon) < 0.01f;
             Color col = isPrime ? primeMeridianColor : longitudeColor;
             float w = isPrime ? lineWidth * 2.5f : lineWidth;
-            CreateLongitudeLine(lon, lineR, col, w);
+            majorList.Add(CreateLongitudeLine(lon, lineR, col, w));
         }
 
-        // --- Labels at every label intersection ---
+        // --- Minor latitude lines (skip positions that coincide with major) ---
+        if (gp.minorSpacing > 0f)
+        {
+            for (float lat = -90f + gp.minorSpacing; lat < 90f; lat += gp.minorSpacing)
+            {
+                if (IsMajorPosition(lat, gp.majorSpacing)) continue;
+                Color col = latitudeColor;
+                col.a *= minorAlphaBase;
+                minorColorList.Add(col);
+                minorList.Add(CreateLatitudeLine(lat, lineR, col, lineWidth * minorWidthFactor));
+            }
+
+            // --- Minor longitude lines ---
+            for (float lon = -180f; lon < 180f; lon += gp.minorSpacing)
+            {
+                if (IsMajorPosition(lon, gp.majorSpacing)) continue;
+                Color col = longitudeColor;
+                col.a *= minorAlphaBase;
+                minorColorList.Add(col);
+                minorList.Add(CreateLongitudeLine(lon, lineR, col, lineWidth * minorWidthFactor));
+            }
+        }
+
+        _majorLines = majorList.ToArray();
+        _minorLines = minorList.ToArray();
+        _minorBaseColors = minorColorList.ToArray();
+
+        // --- Labels at major intersections only ---
         GameObject labelsGo = new GameObject("Labels");
         labelsGo.transform.SetParent(_gridParent.transform, false);
 
@@ -204,6 +250,12 @@ public class LatLonGrid : MonoBehaviour
         }
     }
 
+    static bool IsMajorPosition(float value, float majorSpacing)
+    {
+        float remainder = Mathf.Abs(value % majorSpacing);
+        return remainder < 0.01f || (majorSpacing - remainder) < 0.01f;
+    }
+
     void UpdateVisuals(Camera cam)
     {
         if (_gridParent == null || cam == null) return;
@@ -216,14 +268,39 @@ public class LatLonGrid : MonoBehaviour
         float referenceDist = _gridCreationDist > 0f ? _gridCreationDist : distToCenter;
         float lineScale = distToCenter / referenceDist;
 
-        foreach (Transform child in _gridParent.transform)
+        // Scale major lines
+        if (_majorLines != null)
         {
-            if (child.name == "Labels") continue;
-            LineRenderer lr = child.GetComponent<LineRenderer>();
-            if (lr != null)
-                lr.widthMultiplier = lineScale;
+            for (int i = 0; i < _majorLines.Length; i++)
+            {
+                if (_majorLines[i] != null)
+                    _majorLines[i].widthMultiplier = lineScale;
+            }
         }
 
+        // Scale and fade minor lines based on lodProgress
+        if (_minorLines != null && _minorBaseColors != null)
+        {
+            float progress = 0.5f;
+            if (Application.isPlaying && EarthCamera.Instance != null)
+                progress = EarthCamera.Instance.lodProgress;
+
+            // lodProgress near 0 → 0.3× base alpha; near 1 → 1.0× base alpha
+            float alphaMultiplier = Mathf.Lerp(0.3f, 1f, progress);
+
+            for (int i = 0; i < _minorLines.Length; i++)
+            {
+                if (_minorLines[i] == null) continue;
+                _minorLines[i].widthMultiplier = lineScale;
+
+                Color c = _minorBaseColors[i];
+                c.a *= alphaMultiplier;
+                _minorLines[i].startColor = c;
+                _minorLines[i].endColor = c;
+            }
+        }
+
+        // Labels
         Transform labels = _gridParent.transform.Find("Labels");
         if (labels == null) return;
 
@@ -262,7 +339,7 @@ public class LatLonGrid : MonoBehaviour
     // Grid line helpers
     // ----------------------------------------------------------------
 
-    void CreateLatitudeLine(float lat, float radius, Color color, float width)
+    LineRenderer CreateLatitudeLine(float lat, float radius, Color color, float width)
     {
         LineRenderer lr = CreateLineRenderer($"Lat_{lat:F0}", color, width);
         lr.positionCount = pointsPerLine + 1;
@@ -273,9 +350,10 @@ public class LatLonGrid : MonoBehaviour
             float lon = -180f + 360f * i / pointsPerLine;
             lr.SetPosition(i, S2Geometry.LatLonToUnityPosition(lat, lon, radius));
         }
+        return lr;
     }
 
-    void CreateLongitudeLine(float lon, float radius, Color color, float width)
+    LineRenderer CreateLongitudeLine(float lon, float radius, Color color, float width)
     {
         LineRenderer lr = CreateLineRenderer($"Lon_{lon:F0}", color, width);
         lr.positionCount = pointsPerLine + 1;
@@ -286,6 +364,7 @@ public class LatLonGrid : MonoBehaviour
             float lat = -90f + 180f * i / pointsPerLine;
             lr.SetPosition(i, S2Geometry.LatLonToUnityPosition(lat, lon, radius));
         }
+        return lr;
     }
 
     LineRenderer CreateLineRenderer(string name, Color color, float width)

@@ -13,11 +13,14 @@ public class EarthCamera : MonoBehaviour
     public float rotationSpeed = 5f;
     public float zoomSpeed = 50f;
     public float minDistance = 101f;
-    public float maxDistance = 800f;
+    public float maxDistance = 5000f;
 
     [Header("LOD")]
     [Range(0, 10)]
     public int currentLod;
+
+    /// <summary>0→1 progress within the current LOD band (for smooth minor line fading).</summary>
+    public float lodProgress { get; private set; }
 
     public event System.Action<int> OnLodChanged;
 
@@ -101,7 +104,14 @@ public class EarthCamera : MonoBehaviour
         _cam.nearClipPlane = Mathf.Max(0.1f, surfaceDist * 0.1f);
         _cam.farClipPlane  = distance + 150f;
 
-        int lod = ComputeLod(distance, minDistance, maxDistance);
+        // FOV-aware effective distance: narrow FOV → larger effective distance → coarser LOD
+        const float refHalfFov = 30f; // reference half-FOV in degrees (60° total)
+        float effectiveDistance = distance * Mathf.Tan(_cam.fieldOfView * 0.5f * Mathf.Deg2Rad)
+                                          / Mathf.Tan(refHalfFov * Mathf.Deg2Rad);
+
+        float progress;
+        int lod = ComputeLod(effectiveDistance, minDistance, maxDistance, out progress);
+        lodProgress = progress;
         if (lod != currentLod)
         {
             currentLod = lod;
@@ -117,10 +127,23 @@ public class EarthCamera : MonoBehaviour
     /// Compute LOD [0,10] from distance using logarithmic mapping.
     /// LOD 10 = closest, LOD 0 = farthest.
     /// </summary>
-    public static int ComputeLod(float distance, float minDist = 101f, float maxDist = 800f)
+    public static int ComputeLod(float distance, float minDist = 101f, float maxDist = 5000f)
+    {
+        float progress;
+        return ComputeLod(distance, minDist, maxDist, out progress);
+    }
+
+    /// <summary>
+    /// Compute LOD [0,10] with fractional progress within the current band.
+    /// </summary>
+    public static int ComputeLod(float distance, float minDist, float maxDist, out float progress)
     {
         distance = Mathf.Clamp(distance, minDist, maxDist);
         float t = Mathf.InverseLerp(Mathf.Log(minDist), Mathf.Log(maxDist), Mathf.Log(distance));
-        return Mathf.Clamp(Mathf.RoundToInt((1f - t) * 10f), 0, 10);
+        float continuous = (1f - t) * 10f;
+        int lod = Mathf.Clamp(Mathf.RoundToInt(continuous), 0, 10);
+        // progress = fractional position within the LOD band (0 = just entered, 1 = about to advance)
+        progress = Mathf.Clamp01(continuous - (lod - 0.5f));
+        return lod;
     }
 }
