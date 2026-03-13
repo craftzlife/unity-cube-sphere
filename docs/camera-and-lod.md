@@ -2,13 +2,13 @@
 
 ## EarthCamera
 
-An orbit camera that revolves around the globe origin.
+An orbit camera that revolves around the globe origin using quaternion-based free rotation (no Euler angles). The camera can orbit in any direction, including over the poles, without gimbal lock or axis restrictions.
 
 ### Controls (Play Mode)
 
 | Input | Action |
 |-------|--------|
-| Left mouse drag | Rotate orbit (yaw + pitch) |
+| Left mouse drag | Rotate orbit freely in any direction |
 | Scroll wheel | Zoom in/out |
 
 ### Orbit Parameters
@@ -21,15 +21,19 @@ An orbit camera that revolves around the globe origin.
 | `rotationSpeed` | 5 | Mouse sensitivity multiplier |
 | `zoomSpeed` | 50 | Scroll sensitivity multiplier |
 
-### Distance-Scaled Rotation
+### Screen-Space Rotation
+
+Mouse drag rotates the orbit quaternion around the camera's screen-space axes (`transform.up` for horizontal drag, `transform.right` for vertical drag). This ensures drag direction always matches visual movement regardless of Earth tilt or viewing angle.
 
 Rotation speed scales cubically with distance so dragging feels consistent at all zoom levels:
 
 ```
 ratio = distance / maxDistance
 distanceFactor = ratio³
-yaw  += delta.x × rotationSpeed × 0.1 × distanceFactor
-pitch -= delta.y × rotationSpeed × 0.1 × distanceFactor
+speed = rotationSpeed × 0.1 × distanceFactor
+yawDelta   = AngleAxis( delta.x × speed, camera.up)
+pitchDelta = AngleAxis(-delta.y × speed, camera.right)
+orbitRotation = pitchDelta × yawDelta × orbitRotation
 ```
 
 - At `maxDistance` (300): full speed (distanceFactor = 1.0)
@@ -47,7 +51,7 @@ far  = distance + 150
 
 ### GPS Initialization
 
-On `Start()`, if a `GpsMarker` exists, the camera aligns yaw/pitch to look at the marker's lat/lon position on the globe.
+On `Start()`, if a `GpsMarker` exists, the camera computes the orbit quaternion to look at the marker's lat/lon position on the globe.
 
 ## LOD System
 

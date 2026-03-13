@@ -24,8 +24,7 @@ public class EarthCamera : MonoBehaviour
 
     public event System.Action<int> OnLodChanged;
 
-    private float _yaw = 160f;
-    private float _pitch = 15f;
+    private Quaternion _orbitRotation = Quaternion.Euler(15f, 160f, 0f);
     private Mouse _mouse;
     private int _previousLod = -1;
     private Camera _cam;
@@ -65,17 +64,17 @@ public class EarthCamera : MonoBehaviour
         }
         Vector3 gpsLocal = S2Geometry.LatLonToUnityPosition(gps.latitude, gps.longitude, 1f);
         Vector3 dir = (target.rotation * gpsLocal).normalized;
-        _pitch = Mathf.Asin(dir.y) * Mathf.Rad2Deg;
-        _yaw = Mathf.Atan2(-dir.x, -dir.z) * Mathf.Rad2Deg;
+        float pitch = Mathf.Asin(dir.y) * Mathf.Rad2Deg;
+        float yaw = Mathf.Atan2(-dir.x, -dir.z) * Mathf.Rad2Deg;
+        _orbitRotation = Quaternion.Euler(pitch, yaw, 0f);
     }
 
     void ApplyOrbit()
     {
         Vector3 targetPos = target != null ? target.position : Vector3.zero;
-        Quaternion rotation = Quaternion.Euler(_pitch, _yaw, 0);
-        Vector3 offset = rotation * new Vector3(0, 0, -distance);
+        Vector3 offset = _orbitRotation * new Vector3(0, 0, -distance);
         transform.position = targetPos + offset;
-        transform.LookAt(targetPos);
+        transform.LookAt(targetPos, _orbitRotation * Vector3.up);
     }
 
     void LateUpdate()
@@ -89,9 +88,12 @@ public class EarthCamera : MonoBehaviour
                 Vector2 delta = _mouse.delta.ReadValue();
                 float ratio = distance / maxDistance;
                 float distanceFactor = ratio * ratio * ratio;
-                _yaw   += delta.x * rotationSpeed * 0.1f * distanceFactor;
-                _pitch -= delta.y * rotationSpeed * 0.1f * distanceFactor;
-                _pitch  = Mathf.Clamp(_pitch, -89f, 89f);
+                float speed = rotationSpeed * 0.1f * distanceFactor;
+
+                // Rotate in screen space: drag direction always matches visual movement
+                Quaternion yawDelta   = Quaternion.AngleAxis( delta.x * speed, transform.up);
+                Quaternion pitchDelta = Quaternion.AngleAxis(-delta.y * speed, transform.right);
+                _orbitRotation = pitchDelta * yawDelta * _orbitRotation;
             }
 
             float scroll = _mouse.scroll.ReadValue().y;
