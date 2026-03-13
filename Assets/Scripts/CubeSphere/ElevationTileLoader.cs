@@ -15,6 +15,11 @@ public class ElevationTileLoader : MonoBehaviour
     [Tooltip("Tile LOD derived from EarthCamera. Updated automatically at runtime.")]
     public int targetLod = 2;
 
+    [Tooltip("Minimum tile LOD to load. Clamped to manifest range.")]
+    public int minLod = 0;
+    [Tooltip("Maximum tile LOD to load. Clamped to manifest range.")]
+    public int maxLod = 10;
+
     private CubeSphere _cubeSphere;
     private TileManifest _manifest;
     private Material _elevationShaderMat;
@@ -93,8 +98,9 @@ public class ElevationTileLoader : MonoBehaviour
         if (_manifest == null || _manifest.lod_range == null || _manifest.lod_range.Length < 2)
             return targetLod;
 
-        int minTile = _manifest.lod_range[0];
-        int maxTile = _manifest.lod_range[1];
+        int minTile = Mathf.Max(_manifest.lod_range[0], minLod);
+        int maxTile = Mathf.Min(_manifest.lod_range[1], maxLod);
+        if (minTile > maxTile) minTile = maxTile;
         // Map earth LOD [0,10] to tile LOD [minTile, maxTile]
         float t = earthLod / 10f;
         return Mathf.Clamp(Mathf.RoundToInt(Mathf.Lerp(minTile, maxTile, t)), minTile, maxTile);
