@@ -141,7 +141,7 @@ public class LatLonGrid : MonoBehaviour
 
         float r = _cubeSphere != null ? _cubeSphere.radius : 100f;
         float lineR = r * 1.005f;
-        float labelR = r * 1.04f;
+        float labelR = r * 1.015f;
 
         var majorList = new System.Collections.Generic.List<LineRenderer>();
         var minorList = new System.Collections.Generic.List<LineRenderer>();
