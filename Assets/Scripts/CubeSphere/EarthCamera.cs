@@ -87,9 +87,11 @@ public class EarthCamera : MonoBehaviour
             if (_mouse.leftButton.isPressed)
             {
                 Vector2 delta = _mouse.delta.ReadValue();
-                _yaw += delta.x * rotationSpeed * 0.1f;
-                _pitch -= delta.y * rotationSpeed * 0.1f;
-                _pitch = Mathf.Clamp(_pitch, -89f, 89f);
+                float ratio = distance / maxDistance;
+                float distanceFactor = ratio * ratio * ratio;
+                _yaw   += delta.x * rotationSpeed * 0.1f * distanceFactor;
+                _pitch -= delta.y * rotationSpeed * 0.1f * distanceFactor;
+                _pitch  = Mathf.Clamp(_pitch, -89f, 89f);
             }
 
             float scroll = _mouse.scroll.ReadValue().y;

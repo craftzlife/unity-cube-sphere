@@ -21,6 +21,20 @@ An orbit camera that revolves around the globe origin.
 | `rotationSpeed` | 5 | Mouse sensitivity multiplier |
 | `zoomSpeed` | 50 | Scroll sensitivity multiplier |
 
+### Distance-Scaled Rotation
+
+Rotation speed scales cubically with distance so dragging feels consistent at all zoom levels:
+
+```
+ratio = distance / maxDistance
+distanceFactor = ratio³
+yaw  += delta.x × rotationSpeed × 0.1 × distanceFactor
+pitch -= delta.y × rotationSpeed × 0.1 × distanceFactor
+```
+
+- At `maxDistance` (300): full speed (distanceFactor = 1.0)
+- At distance 110: distanceFactor ≈ 0.05 — much slower, matching the closer perspective
+
 ### Dynamic Clip Planes
 
 Near and far clip planes adjust based on orbit distance to prevent z-fighting and clipping:
