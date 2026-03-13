@@ -7,6 +7,8 @@ public class GpsMarker : MonoBehaviour
     [Header("GPS Location")]
     public float latitude = 10.8231f;   // Ho Chi Minh City default
     public float longitude = 106.6297f;
+    [Tooltip("Altitude above sea level in meters")]
+    public float altitude = 0f;
     public bool useDeviceGps = false;
 
     [Header("Marker Appearance")]
@@ -16,6 +18,8 @@ public class GpsMarker : MonoBehaviour
     public float pulseAmplitude = 0.3f;
     [Tooltip("Desired screen-space size in pixels")]
     public float screenPixelSize = 8f;
+
+    private const float EarthRadiusMeters = 6_371_000f;
 
     private float _sphereRadius = 100f;
     private GameObject _marker;
@@ -135,15 +139,17 @@ public class GpsMarker : MonoBehaviour
     public void UpdatePosition()
     {
         if (_marker == null) return;
-        Vector3 pos = S2Geometry.LatLonToUnityPosition(latitude, longitude, _sphereRadius * 1.015f);
+        float markerRadius = _sphereRadius * (1f + altitude / EarthRadiusMeters);
+        Vector3 pos = S2Geometry.LatLonToUnityPosition(latitude, longitude, markerRadius);
         _marker.transform.localPosition = pos;
         _marker.transform.up = pos.normalized;
     }
 
-    public void SetLocation(float lat, float lon)
+    public void SetLocation(float lat, float lon, float alt = 0f)
     {
         latitude = lat;
         longitude = lon;
+        altitude = alt;
         UpdatePosition();
     }
 
@@ -171,7 +177,7 @@ public class GpsMarker : MonoBehaviour
     {
 #if UNITY_ANDROID || UNITY_IOS
         if (Input.location.status == LocationServiceStatus.Running)
-            SetLocation(Input.location.lastData.latitude, Input.location.lastData.longitude);
+            SetLocation(Input.location.lastData.latitude, Input.location.lastData.longitude, Input.location.lastData.altitude);
 #endif
     }
 }

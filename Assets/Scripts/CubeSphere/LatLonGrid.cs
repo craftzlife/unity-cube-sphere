@@ -9,7 +9,7 @@ public class LatLonGrid : MonoBehaviour
     public Color longitudeColor = new Color(1f, 1f, 1f, 0.35f);
     public Color equatorColor = new Color(1f, 0.8f, 0f, 0.6f);
     public Color primeMeridianColor = new Color(1f, 0.2f, 0.2f, 0.6f);
-    public float lineWidth = 0.1f;
+    public float lineWidth = 0.015f;
     [Range(36, 360)]
     public int pointsPerLine = 180;
 
@@ -140,8 +140,10 @@ public class LatLonGrid : MonoBehaviour
         _gridParent.hideFlags = HideFlags.DontSave;
 
         float r = _cubeSphere != null ? _cubeSphere.radius : 100f;
-        float lineR = r * 1.005f;
-        float labelR = r * 1.015f;
+        const float earthRadiusMeters = 6_371_000f;
+        const float gridAltitude = 9_000f; // meters above sea level
+        float lineR = r * (1f + gridAltitude / earthRadiusMeters);
+        float labelR = r * (1f + (gridAltitude + 1_000f) / earthRadiusMeters);
 
         var majorList = new System.Collections.Generic.List<LineRenderer>();
         var minorList = new System.Collections.Generic.List<LineRenderer>();

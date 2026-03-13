@@ -31,8 +31,8 @@ Skybox
 | `S2Geometry` | `Scripts/CubeSphere/S2Geometry.cs` | Static utility class. Lat/lon ↔ XYZ ↔ face/UV conversions. Handles geographic Z-up to Unity Y-up coordinate swap. |
 | `EarthCamera` | `Scripts/CubeSphere/EarthCamera.cs` | Orbit camera around a target. Mouse drag rotates, scroll zooms. Computes LOD [0–10] from distance using logarithmic mapping with FOV correction. Fires `OnLodChanged` event. Dynamic near/far clip planes. |
 | `ElevationTileLoader` | `Scripts/CubeSphere/ElevationTileLoader.cs` | Fetches `manifest.json` from a local tile server, then loads per-face elevation tiles. Composites sub-tiles into a single RFloat texture per face. Listens to `EarthCamera.OnLodChanged` to swap tile LOD. |
-| `LatLonGrid` | `Scripts/CubeSphere/LatLonGrid.cs` | Draws latitude/longitude lines using `LineRenderer`. Uses a LOD table (11 levels) for major/minor line spacing. Labels at major intersections via `TextMesh`. Per-frame: scales line width by distance, fades minor lines by `lodProgress`, billboard-rotates labels. |
-| `GpsMarker` | `Scripts/CubeSphere/GpsMarker.cs` | Places a sphere primitive at a lat/lon position. Constant screen-size scaling. Pulse animation in play mode. Optional device GPS on mobile. |
+| `LatLonGrid` | `Scripts/CubeSphere/LatLonGrid.cs` | Draws latitude/longitude lines using `LineRenderer` at 9,000m altitude, labels at 10,000m. Uses a LOD table (11 levels) for major/minor line spacing. Labels at major intersections via `TextMesh`. Per-frame: scales line width by distance, fades minor lines by `lodProgress`, billboard-rotates labels. |
+| `GpsMarker` | `Scripts/CubeSphere/GpsMarker.cs` | Places a sphere primitive at a lat/lon/altitude position. Altitude (meters above sea level) is converted to globe scale via `radius × (1 + alt / 6,371,000)`. Constant screen-size scaling. Pulse animation in play mode. Optional device GPS on mobile (reads altitude from device). |
 | `RealtimeSunLight` | `Scripts/CubeSphere/RealtimeSunLight.cs` | Computes solar declination and subsolar longitude from UTC time. Rotates a directional light to match. Supports custom time override via inspector. |
 
 ## Shaders

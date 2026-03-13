@@ -240,7 +240,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1128350702}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.0013753679, y: -0.70236164, z: 0.001357097, w: 0.7118177}
+  m_LocalRotation: {x: 0.0012938307, y: -0.7025517, z: 0.0012773246, w: 0.7116304}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -310,6 +310,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GpsMarker
   latitude: 10.8231
   longitude: 106.6297
+  altitude: 0
   useDeviceGps: 1
   markerSize: 1
   markerColor: {r: 0.10196078, g: 0.37063575, b: 1, a: 1}
@@ -457,13 +458,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1302869462}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.013831547, y: 0.8556233, z: 0.022894986, w: 0.5169075}
-  m_LocalPosition: {x: -265.17688, y: -16.043468, z: 139.36946}
+  m_LocalRotation: {x: -0.0014487547, y: 0.81940866, z: 0.0020710286, w: 0.5732042}
+  m_LocalPosition: {x: -281.81128, y: -1.5164704, z: 102.85957}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: -101.196, z: 0}
+  m_LocalEulerAnglesHint: {x: -3.066, y: -241.871, z: 0}
 --- !u!1 &1408452220
 GameObject:
   m_ObjectHideFlags: 0
@@ -515,7 +516,7 @@ MonoBehaviour:
   longitudeColor: {r: 1, g: 1, b: 1, a: 0.6}
   equatorColor: {r: 1, g: 0.8, b: 0, a: 0.6}
   primeMeridianColor: {r: 1, g: 0.2, b: 0.2, a: 0.6}
-  lineWidth: 0.05
+  lineWidth: 0.015
   pointsPerLine: 360
   minorAlphaBase: 0.8
   minorWidthFactor: 0.6
@@ -543,7 +544,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1408452220}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0.19234866, y: -0.45404735, z: -0.06529496, w: 0.8675134}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
