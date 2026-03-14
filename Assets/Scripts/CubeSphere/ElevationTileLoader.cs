@@ -18,7 +18,7 @@ public class ElevationTileLoader : MonoBehaviour
     [Tooltip("Minimum tile LOD to load. Clamped to manifest range.")]
     public int minLod = 0;
     [Tooltip("Maximum tile LOD to load. Clamped to manifest range.")]
-    public int maxLod = 10;
+    public int maxLod = 13;
 
     private CubeSphere _cubeSphere;
     private TileManifest _manifest;
@@ -101,8 +101,8 @@ public class ElevationTileLoader : MonoBehaviour
         int minTile = Mathf.Max(_manifest.lod_range[0], minLod);
         int maxTile = Mathf.Min(_manifest.lod_range[1], maxLod);
         if (minTile > maxTile) minTile = maxTile;
-        // Map earth LOD [0,10] to tile LOD [minTile, maxTile]
-        float t = earthLod / 10f;
+        // Map earth LOD [0,13] to tile LOD [minTile, maxTile]
+        float t = earthLod / 13f;
         return Mathf.Clamp(Mathf.RoundToInt(Mathf.Lerp(minTile, maxTile, t)), minTile, maxTile);
     }
 

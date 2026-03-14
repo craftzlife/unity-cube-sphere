@@ -42,19 +42,22 @@ public class LatLonGrid : MonoBehaviour
         public float charSize;
     }
 
-    // LOD 0 = farthest (coarsest), LOD 10 = closest (finest)
+    // LOD 0 = farthest (coarsest), LOD 13 = closest (finest)
     private static readonly GridParams[] LodToGrid = {
-        new GridParams { majorSpacing = 20f, minorSpacing = 0f,  labelSpacing = 20f, charSize = 0.8f  }, // LOD 0
-        new GridParams { majorSpacing = 20f, minorSpacing = 0f,  labelSpacing = 20f, charSize = 0.8f  }, // LOD 1
-        new GridParams { majorSpacing = 20f, minorSpacing = 0f,  labelSpacing = 20f, charSize = 0.8f  }, // LOD 2
-        new GridParams { majorSpacing = 20f, minorSpacing = 0f,  labelSpacing = 20f, charSize = 0.8f  }, // LOD 3
-        new GridParams { majorSpacing = 20f, minorSpacing = 10f, labelSpacing = 20f, charSize = 0.65f }, // LOD 4
-        new GridParams { majorSpacing = 20f, minorSpacing = 10f, labelSpacing = 20f, charSize = 0.55f }, // LOD 5
-        new GridParams { majorSpacing = 20f, minorSpacing = 10f, labelSpacing = 20f, charSize = 0.55f }, // LOD 6
-        new GridParams { majorSpacing = 10f, minorSpacing = 5f,  labelSpacing = 10f, charSize = 0.45f }, // LOD 7
-        new GridParams { majorSpacing = 10f, minorSpacing = 5f,  labelSpacing = 10f, charSize = 0.4f  }, // LOD 8
-        new GridParams { majorSpacing = 5f,  minorSpacing = 0f,  labelSpacing = 5f,  charSize = 0.45f }, // LOD 9
-        new GridParams { majorSpacing = 5f,  minorSpacing = 1f,  labelSpacing = 5f,  charSize = 0.4f  }, // LOD 10
+        new GridParams { majorSpacing = 20f, minorSpacing = 0f,   labelSpacing = 20f, charSize = 0.8f  }, // LOD 0
+        new GridParams { majorSpacing = 20f, minorSpacing = 0f,   labelSpacing = 20f, charSize = 0.8f  }, // LOD 1
+        new GridParams { majorSpacing = 20f, minorSpacing = 0f,   labelSpacing = 20f, charSize = 0.8f  }, // LOD 2
+        new GridParams { majorSpacing = 20f, minorSpacing = 0f,   labelSpacing = 20f, charSize = 0.8f  }, // LOD 3
+        new GridParams { majorSpacing = 20f, minorSpacing = 10f,  labelSpacing = 20f, charSize = 0.65f }, // LOD 4
+        new GridParams { majorSpacing = 20f, minorSpacing = 10f,  labelSpacing = 20f, charSize = 0.55f }, // LOD 5
+        new GridParams { majorSpacing = 20f, minorSpacing = 10f,  labelSpacing = 20f, charSize = 0.55f }, // LOD 6
+        new GridParams { majorSpacing = 10f, minorSpacing = 5f,   labelSpacing = 10f, charSize = 0.45f }, // LOD 7
+        new GridParams { majorSpacing = 10f, minorSpacing = 5f,   labelSpacing = 10f, charSize = 0.4f  }, // LOD 8
+        new GridParams { majorSpacing = 5f,  minorSpacing = 0f,   labelSpacing = 5f,  charSize = 0.45f }, // LOD 9
+        new GridParams { majorSpacing = 5f,  minorSpacing = 1f,   labelSpacing = 5f,  charSize = 0.4f  }, // LOD 10
+        new GridParams { majorSpacing = 5f,  minorSpacing = 1f,   labelSpacing = 5f,  charSize = 0.35f }, // LOD 11
+        new GridParams { majorSpacing = 5f,  minorSpacing = 1f,   labelSpacing = 5f,  charSize = 0.3f  }, // LOD 12
+        new GridParams { majorSpacing = 5f,  minorSpacing = 1f,   labelSpacing = 5f,  charSize = 0.25f }, // LOD 13
     };
 
     void OnEnable()
