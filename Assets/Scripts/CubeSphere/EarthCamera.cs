@@ -132,7 +132,7 @@ public class EarthCamera : MonoBehaviour
     /// Compute LOD [0,13] from distance using logarithmic mapping.
     /// LOD 13 = closest, LOD 0 = farthest.
     /// </summary>
-    public static int ComputeLod(float distance, float minDist = 101f, float maxDist = 5000f)
+    public static int ComputeLod(float distance, float minDist = 101f, float maxDist = 300f)
     {
         float progress;
         return ComputeLod(distance, minDist, maxDist, out progress);
