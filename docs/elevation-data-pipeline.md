@@ -73,6 +73,7 @@ The resulting `Texture2D` (RFloat, bilinear, clamp) is assigned via `CubeSphere.
 | `_ElevScale` | 1.0 | Elevation multiplier |
 | `_MaxLandElev` | 1500 | Scale for land color ramp normalization |
 | `_MaxDepth` | 100 | Scale for water depth normalization |
+| `_NightBrightness` | 0.10 | Ambient light level on the night side (0 = fully dark, 1 = no shading) |
 
 ### Color Mapping
 
@@ -96,5 +97,6 @@ height01 = clamp(elevation / MaxLandElev, 0, 1)
 ### Lighting
 
 - Main directional light with `saturate(N·L)` diffuse
-- Ambient: `(0.30, 0.30, 0.35)` — slight blue tint
-- Combined: `color *= ambient + NdotL × 0.70 × lightColor`
+- Ambient: `(1.0, 1.0, 1.17) × _NightBrightness` — slight blue tint on the night side
+- Combined: `color *= ambient + NdotL × (1 − _NightBrightness) × lightColor`
+- At default `_NightBrightness = 0.10`: night side gets ~10% ambient, day side gets ~90% diffuse contribution

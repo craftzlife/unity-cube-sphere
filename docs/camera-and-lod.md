@@ -61,12 +61,13 @@ LOD is computed logarithmically from the camera's effective distance:
 
 ```
 t = InverseLerp(log(minDist), log(maxDist), log(distance))
-continuous = (1 − t) × 10
-lod = round(continuous), clamped to [0, 10]
+continuous = (1 − t) × 13
+lod = round(continuous), clamped to [0, 13]
 ```
 
 - **LOD 0** = farthest (coarsest detail)
-- **LOD 10** = closest (finest detail)
+- **LOD 13** = closest (finest detail)
+- Default `minDist = 101`, `maxDist = 300` (matches play mode orbit range)
 
 ### FOV-Aware Effective Distance
 
@@ -103,6 +104,11 @@ Used by `LatLonGrid` to smoothly fade minor lines in/out.
 | 8 | 10 | 5 | 10 | 0.4 |
 | 9 | 5 | — | 5 | 0.45 |
 | 10 | 5 | 1 | 5 | 0.4 |
+| 11 | 5 | 1 | 5 | 0.35 |
+| 12 | 5 | 1 | 5 | 0.3 |
+| 13 | 5 | 1 | 5 | 0.25 |
+
+LOD 11–13 reuse the same 5°/1° grid density as LOD 10 with progressively smaller label sizes. Finer grid spacings (e.g. 1° major) are avoided because they generate ~64,000 labels which causes crashes.
 
 ### Visual Updates (Per Frame)
 
@@ -113,8 +119,10 @@ Used by `LatLonGrid` to smoothly fade minor lines in/out.
 
 ## Elevation Tile LOD Mapping
 
-`ElevationTileLoader` maps the EarthCamera LOD [0–10] to tile LOD range from the manifest:
+`ElevationTileLoader` maps the EarthCamera LOD [0–13] to tile LOD range from the manifest:
 
 ```
-tileLod = lerp(manifest.lod_range[0], manifest.lod_range[1], earthLod / 10)
+tileLod = lerp(manifest.lod_range[0], manifest.lod_range[1], earthLod / 13)
 ```
+
+The configurable `minLod` (default 0) and `maxLod` (default 13) further clamp the tile LOD range.
